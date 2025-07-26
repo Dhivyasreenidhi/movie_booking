@@ -1,0 +1,49 @@
+<div class="fixed bottom-4 right-4 z-40">
+  <div *ngIf="showChat" class="bg-gray-800 rounded-t-lg shadow-xl w-80 animate__animated animate__fadeInUp">
+    <div class="bg-blue-600 text-white p-3 rounded-t-lg flex justify-between items-center">
+      <h3 class="font-semibold flex items-center gap-2 text-sm">
+        <i class="fas fa-headset"></i> Customer Support
+      </h3>
+      <button (click)="toggleChat()" class="text-white hover:text-gray-200">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="h-64 overflow-y-auto p-3 bg-gray-900">
+      <div *ngFor="let message of messages" class="mb-3">
+        <div *ngIf="message.sender === 'user'" class="flex justify-end">
+          <div class="bg-blue-600 text-white rounded-lg p-2 max-w-xs text-sm">
+            {{ message.text }}
+          </div>
+        </div>
+        <div *ngIf="message.sender === 'agent'" class="flex justify-start">
+          <div class="bg-gray-700 text-white rounded-lg p-2 max-w-xs text-sm">
+            {{ message.text }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="p-3 border-t border-gray-700">
+      <div class="flex gap-2">
+        <input [(ngModel)]="inputMessage" (keyup.enter)="sendMessage()" 
+               class="flex-1 p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm"
+               placeholder="Type your message...">
+        <button (click)="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-3 rounded">
+          <i class="fas fa-paper-plane text-sm"></i>
+        </button>
+      </div>
+      <div class="text-xs text-gray-400 mt-2">
+        Our team typically replies within 2 minutes
+      </div>
+    </div>
+  </div>
+  
+  <button *ngIf="!showChat" (click)="toggleChat()" 
+          class="bg-blue-600 p-3 rounded-full text-white hover:bg-blue-700 shadow-lg animate__animated animate__bounceInUp">
+    <i class="fas fa-comment-dots"></i>
+    <span *ngIf="unreadMessages > 0" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+      {{ unreadMessages }}
+    </span>
+  </button>
+</div>

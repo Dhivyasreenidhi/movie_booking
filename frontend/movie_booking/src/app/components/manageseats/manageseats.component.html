@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineAdmin - Movie Theater Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-light: #ef4444;
+      --primary-dark: #b91c1c;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #111827;
+      --light: #f9fafb;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color:  #030712;
+      color: #f3f4f6;
+      min-height: 140vh;
+    }
+    
+    .sidebar-item {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar-item:hover {    
+      transform: translateX(4px);
+      background-color: rgba(220, 38, 38, 0.1);
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-badge {
+      transition: all 0.2s ease;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .chart-container {
+      transition: all 0.3s ease;
+    }
+    
+    .tab-active {
+      position: relative;
+      color: var(--primary);
+    }
+    
+    .tab-active:after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: var(--primary);
+      border-radius: 3px;
+    }
+    
+    .user-avatar {
+      transition: transform 0.3s ease;
+    }
+    
+    .user-avatar:hover {
+      transform: scale(1.1);
+    }
+    
+    .table-row {
+      transition: background-color 0.2s ease;
+    }
+    
+    .table-row:hover {
+      background-color: rgba(31, 41, 55, 0.8);
+    }
+    
+    .dropdown-menu {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* Layout styles */
+    .main-container {
+      display: grid;
+      grid-template-areas: 
+        "navbar navbar"
+        "sidebar content";
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    app-nav-bar {
+      grid-area: navbar;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    app-sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 0;
+  align-self: start; /* Ensures it aligns at the top of the grid area */
+}
+
+    .content-area {
+      grid-area: content;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Header -->
+    <app-nav-bar></app-nav-bar>
+    
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-center mb-8 text-red-500">Seat Blocking Management</h1>
+
+  <div class="flex flex-col md:flex-row gap-8">
+    <!-- Show Selection Panel -->
+    <div class="w-full md:w-1/3">
+      <h2 class="text-xl font-semibold mb-4">Available Shows</h2>
+      <div class="space-y-2">
+        <div 
+          *ngFor="let show of shows"
+          (click)="selectShow(show)"
+          [class.bg-gray-500]="selectedShow?.id === show.id"
+          class="p-4 border rounded-lg cursor-pointer hover:bg-gray-500 transition-colors"
+        >
+          <h3 class="font-medium">{{ show.movieTitle }}</h3>
+          <p class="text-sm text-gray-700">{{ show.theaterName }} • {{ show.date | date }} • {{ show.time }}</p>
+          <p class="text-sm mt-1">
+            <span class="font-medium">Seats:</span> 
+            {{ show.seats.length - getBlockedSeatsCount() }} available / 
+            {{ show.seats.length }} total
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seat Management Panel -->
+    <div class="w-full md:w-2/3" *ngIf="selectedShow">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold">Seat Management</h2>
+        <div class="flex items-center gap-2">
+          <button 
+            (click)="toggleSelectAll()"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded"
+          >
+            {{ allSelected ? 'Deselect All' : 'Select All' }}
+          </button>
+          <button 
+            (click)="blockSelectedSeats()"
+            [disabled]="getSelectedSeatsCount() === 0"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            Block Selected
+          </button>
+          <button 
+            (click)="unblockSelectedSeats()"
+            [disabled]="getSelectedSeatsCount() === 0"
+            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-50"
+          >
+            Unblock Selected 
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-4 p-4 bg-gray-500 rounded-lg">
+        <h3 class="font-medium mb-2">{{ selectedShow.movieTitle }}</h3>
+        <p class="text-sm text-white mb-2">
+          {{ selectedShow.theaterName }} • {{ selectedShow.date | date }} • {{ selectedShow.time }}
+        </p>
+        <p class="text-sm">
+          <span class="font-medium">Blocked seats:</span> {{ getBlockedSeatsCount() }} / {{ selectedShow.seats.length }}
+        </p>
+      </div>
+
+      <!-- Seat Map -->
+      <div class="bg-gray-700 p-4 rounded-lg shadow-sm border">
+        <div class="flex justify-center mb-2">
+          <div class="w-16 h-8 bg-black rounded flex items-center justify-center text-xs font-medium">
+            SCREEN
+          </div>
+        </div>
+
+        <div class="grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(40px, 1fr))">
+          <!-- Seat Grid -->
+          <div *ngFor="let seat of selectedShow.seats" 
+            (click)="toggleSeatSelection(seat)"
+            (dblclick)="toggleSeatBlocking(seat)"
+            [class.bg-red-200]="seat.isBlocked"
+            [class.bg-blue-200]="seat.isSelected"
+            [class.bg-gray-500]="!seat.isBlocked && !seat.isSelected"
+            [class.border-red-500]="seat.isBlocked"
+            [class.border-blue-500]="seat.isSelected"
+            [class.border-gray-900]="!seat.isBlocked && !seat.isSelected"
+            class="p-2 border rounded text-center text-sm font-medium cursor-pointer hover:opacity-80 transition-all"
+          >
+            {{ seat.number }}
+          </div>
+        </div>
+
+        <div class="mt-6 flex justify-center space-x-6">
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-gray-100 border border-gray-300 mr-2"></div>
+            <span class="text-sm">Available</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-red-200 border border-red-500 mr-2"></div>
+            <span class="text-sm">Blocked</span>
+          </div>
+          <div class="flex items-center">
+            <div class="w-4 h-4 bg-blue-200 border border-blue-500 mr-2"></div>
+            <span class="text-sm">Selected</span>
+          </div>
+          <div class="flex items-center text-sm text-gray-500">
+            (Double-click to toggle blocking)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No Show Selected Message -->
+    <div *ngIf="!selectedShow" class="w-full md:w-2/3 flex items-center justify-center bg-gray-50 rounded-lg p-8">
+      <p class="text-gray-500">Please select a show to manage seat blocking</p>
+    </div>
+  </div>
+</div>
+     
+     </div>
+    
+</body>
+</html>

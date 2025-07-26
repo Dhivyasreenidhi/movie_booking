@@ -1,0 +1,381 @@
+    <!-- Banner Table Section -->
+    <div class="bg-gray-800 p-6 rounded-lg shadow-md mt-8">
+      <h2 class="text-lg font-semibold mb-4 text-white">All Banners</h2>
+      <table class="min-w-full divide-y divide-gray-700">
+        <thead>
+          <tr>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Genre</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Director</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+            <th class="px-4 py-2 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of banners" class="table-row">
+            <td class="px-4 py-2 text-white">{{b.title}}</td>
+            <td class="px-4 py-2 text-white">{{b.genre}}</td>
+            <td class="px-4 py-2 text-white">{{b.director}}</td>
+            <td class="px-4 py-2 text-white">{{b.status}}</td>
+            <td class="px-4 py-2">
+              <button (click)="deleteBanner(b.id)" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineAdmin - Movie Theater Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-light: #ef4444;
+      --primary-dark: #b91c1c;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #111827;
+      --light: #f9fafb;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color:  #030712;
+      color: #f3f4f6;
+      min-height: 150vh;
+    }
+    
+    .sidebar-item {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar-item:hover {
+      transform: translateX(4px);
+      background-color: rgba(220, 38, 38, 0.1);
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-badge {
+      transition: all 0.2s ease;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .chart-container {
+      transition: all 0.3s ease;
+    }
+    
+    .tab-active {
+      position: relative;
+      color: var(--primary);
+    }
+    
+    .tab-active:after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: var(--primary);
+      border-radius: 3px;
+    }
+    
+    .user-avatar {
+      transition: transform 0.3s ease;
+    }
+    
+    .user-avatar:hover {
+      transform: scale(1.1);
+    }
+    
+    .table-row {
+      transition: background-color 0.2s ease;
+    }
+    
+    .table-row:hover {
+      background-color: rgba(31, 41, 55, 0.8);
+    }
+    
+    .dropdown-menu {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* Layout styles */
+    .main-container {
+      display: grid;
+      grid-template-areas: 
+        "navbar navbar"
+        "sidebar content";
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    app-nav-bar {
+      grid-area: navbar;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    app-sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 0;
+  align-self: start; /* Ensures it aligns at the top of the grid area */
+}
+
+    .content-area {
+      grid-area: content;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container ">
+    <!-- Header -->
+    <app-nav-bar></app-nav-bar>
+    
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+
+    <!-- Main Content -->
+     <div class="min-h-screen">
+  <!-- Horizontal Navigation Bar -->
+  <app-content-navbar></app-content-navbar>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 py-8 ">
+    <h1 class="text-3xl font-bold text-red-600 mb-6">BANNER</h1>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 ">
+      <!-- Live Preview Section -->
+      <div class="bg-gray-900 p-6 rounded-lg shadow-md">
+        <h2 class="text-lg font-semibold mb-4">Live Preview</h2>
+        
+        <div class="relative w-full h-96 overflow-hidden bg-black rounded-lg">
+          <img 
+    [src]="banner.bannerImages[banner.currentBannerIndex]" 
+    class="w-full h-full object-cover opacity-70"
+    alt="Banner background">
+          
+          <div class="absolute inset-0 flex items-center p-8">
+            <div class="text-white max-w-lg">
+              <span class="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold mb-4 inline-block">
+                {{banner.genre}}
+              </span>
+              
+              <h3 class="text-4xl md:text-5xl font-bold mb-4 text-yellow-400">{{banner.title}}</h3>
+              
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-1 bg-yellow-500 mr-4"></div>
+                <p class="text-lg italic">Written & Directed by <span class="font-bold text-yellow-400">{{banner.director}}</span></p>
+              </div>
+              
+              <p class="text-lg mb-6">{{banner.description}}</p>
+              
+              <div class="flex gap-4">
+                <button class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-6 rounded-lg transition-colors">
+                  WATCH TRAILER
+                </button>
+                <button class="bg-transparent border-2 border-yellow-500 hover:bg-yellow-500/10 text-yellow-500 font-bold py-2 px-6 rounded-lg transition-colors">
+                  MORE INFO
+                </button>
+              </div>
+              
+              <div class="absolute bottom-4 right-4 bg-yellow-500 text-black px-4 py-1 rounded-lg font-bold">
+                {{banner.status}}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <button 
+          (click)="rotateBanner()"
+          class="mt-4 bg-gray-900 hover:bg-gray-300 px-4 py-2 rounded transition-colors">
+          Rotate Banner Image
+        </button>
+      </div>
+
+      <!-- Edit Form Section -->
+      <div class="bg-gray-700 p-6 rounded-lg shadow-md bg-gray-900">
+        <h2 class="text-lg font-semibold mb-4">Edit Banner Content</h2>
+        
+        <form class="space-y-4" (ngSubmit)="saveBanner()">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Genre</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.genre" 
+              (ngModelChange)="updatePreview()"
+              name="genre"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Movie Title</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.title" 
+              (ngModelChange)="updatePreview()"
+              name="title"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Director</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.director" 
+              (ngModelChange)="updatePreview()"
+              name="director"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea 
+              [(ngModel)]="form.description" 
+              (ngModelChange)="updatePreview()"
+              name="description"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select 
+              [(ngModel)]="form.status" 
+              (ngModelChange)="updatePreview()"
+              name="status"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+              <option value="NOW SHOWING">Now Showing</option>
+              <option value="COMING SOON">Coming Soon</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Trailer URL (YouTube embed)</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.trailerUrl" 
+              (ngModelChange)="updatePreview()"
+              name="trailerUrl"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Poster Image URL</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.posterImage" 
+              (ngModelChange)="updatePreview()"
+              name="posterImage"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Banner Images (comma separated URLs)</label>
+            <textarea 
+              [(ngModel)]="form.bannerImages" 
+              (ngModelChange)="updatePreview()"
+              name="bannerImages"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.year" 
+              name="year"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.duration" 
+              name="duration"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.rating" 
+              name="rating"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Top Cast (comma separated)</label>
+            <input 
+              type="text" 
+              [(ngModel)]="form.topCast" 
+              name="topCast"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Story Line</label>
+            <textarea 
+              [(ngModel)]="form.storyLine" 
+              name="storyLine"
+              rows="2"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+          </div>
+          <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-6 rounded-lg transition-colors mt-4">Save Banner</button>
+          <div *ngIf="saveSuccess" class="text-green-400 font-bold mt-2">Banner saved successfully!</div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </div>
+     
+    
+</body>
+</html>
+
+
+

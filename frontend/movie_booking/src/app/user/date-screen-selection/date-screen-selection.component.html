@@ -1,0 +1,42 @@
+<div *ngIf="currentStep === 1" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 animate__animated animate__fadeIn">
+  <div>
+    <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+      <i class="far fa-calendar-alt"></i> Select Date
+    </h3>
+    <div class="grid grid-cols-3 gap-2">
+      <button *ngFor="let date of dates" 
+              [class.bg-blue-600]="selectedDate === date.value"
+              [class.bg-gray-700]="selectedDate !== date.value"
+              class="p-3 rounded-lg text-center hover:bg-gray-600 transition"
+              (click)="selectDate(date)">
+        <div class="font-bold text-sm">{{ date.day }}</div>
+        <div class="text-xs">{{ date.date }}</div>
+        <div class="text-xs opacity-80">{{ date.month }}</div>
+      </button>
+    </div>
+  </div>
+  
+  <div>
+    <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+      <i class="fas fa-film"></i> Select Screen & Format
+    </h3>
+    <div class="grid grid-cols-1 gap-3">
+      <button *ngFor="let screen of screens" 
+              [class.bg-blue-600]="selectedScreen === screen.id"
+              [class.bg-gray-700]="selectedScreen !== screen.id"
+              class="p-3 rounded-lg text-left hover:bg-gray-600 transition"
+              (click)="selectScreen(screen)">
+        <div class="font-bold text-sm">{{ screen.name }}</div>
+        <div class="text-xs">{{ screen.technology }}</div>
+        <div class="text-xs opacity-80">Seats available: {{ screen.availableSeats }}</div>
+        <div class="text-xs mt-1">
+          <span *ngFor="let feature of screen.features" 
+                [ngClass]="getFeatureClass(feature)"
+                class="px-1 rounded ml-1 first:ml-0">
+            {{ feature }}
+          </span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>

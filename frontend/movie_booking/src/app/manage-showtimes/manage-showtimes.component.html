@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineAdmin - Showtime Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-light: #ef4444;
+      --primary-dark: #b91c1c;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #111827;
+      --light: #f9fafb;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #030712;
+      color: #f3f4f6;
+      min-height: 140vh;
+    }
+    
+    .sidebar-item, .stat-card, .status-badge, .chart-container, .user-avatar, .table-row, .dropdown-menu {
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-item:hover { transform: translateX(4px); background-color: rgba(220, 38, 38, 0.1); }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2); }
+    .status-badge:hover { transform: scale(1.05); }
+    .user-avatar:hover { transform: scale(1.1); }
+    .table-row:hover { background-color: rgba(31, 41, 55, 0.8); }
+    
+    .dropdown:hover .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+    
+    .tab-active { position: relative; color: var(--primary); }
+    .tab-active:after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background-color: var(--primary); border-radius: 3px; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+    
+    .main-container { display: grid; grid-template-areas: "navbar navbar" "sidebar content"; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr; min-height: 100vh; }
+    app-nav-bar { grid-area: navbar; position: sticky; top: 0; z-index: 50; }
+    app-sidebar { grid-area: sidebar; position: sticky; top: 0; align-self: start; }
+    .content-area { grid-area: content; padding: 1.5rem; overflow-y: auto; }
+    
+    .text-gradient { background: linear-gradient(90deg, var(--primary), var(--primary-light)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .btn-primary { background-color: var(--primary); color: white; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3); }
+    .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4); }
+    .btn-secondary { background-color: #374151; color: white; transition: all 0.3s ease; }
+    .btn-secondary:hover { background-color: #4b5563; transform: translateY(-1px); }
+    .btn-danger { background-color: var(--danger); color: white; transition: all 0.3s ease; }
+    .btn-danger:hover { background-color: var(--primary-dark); transform: translateY(-1px); }
+    
+    .modal-overlay { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); }
+    .modal-content { background-color: #1f2937; border: 1px solid #374151; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+    .form-input { background-color: #374151; color: white; border: 1px solid #4b5563; transition: all 0.3s ease; }
+    .form-input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.3); }
+    @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .animate-scaleIn { animation: scaleIn 0.3s ease-out forwards; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .smooth-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .tooltip { position: relative; }
+    .tooltip::after { content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background-color: #1f2937; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; white-space: nowrap; opacity: 0; visibility: hidden; transition: all 0.2s ease; z-index: 10; }
+    .tooltip:hover::after { opacity: 1; visibility: visible; bottom: calc(100% + 5px); }
+    .seat { width: 30px; height: 30px; margin: 5px; border-radius: 4px; display: inline-block; cursor: pointer; }
+    .seat-available { background-color: #10b981; }
+    .seat-booked { background-color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <app-nav-bar></app-nav-bar>
+    <app-sidebar></app-sidebar>
+    <div class="content-area smooth-transition">
+      <div class="max-w-7xl mx-auto p-4">
+        <div class="flex justify-between items-center mb-10">
+          <h1 class="text-3xl font-bold text-red-500 flex items-center gap-3">
+            <i class="fas fa-clock"></i>
+            <span>Showtime Management {{movieFilter ? 'for ' + movieFilter.title : ''}}</span>
+          </h1>
+          <button type="button" class="btn-primary px-6 py-3 rounded-lg flex items-center gap-2 animate-fadeIn hover:shadow-lg" 
+                  (click)="openAddForm()" aria-label="Add a new showtime">
+            <i class="fas fa-plus"></i>
+            <span class="font-semibold">Add Showtime</span>
+          </button>
+        </div>
+
+        <!-- Showtime Table -->
+        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-lg animate-fadeIn">
+          <table class="w-full">
+            <thead>
+              <tr class="bg-gray-900">
+                <th class="p-4 text-left">ID</th>
+                <th class="p-4 text-left">Screen</th>
+                <th class="p-4 text-left">Show Date</th>
+                <th class="p-4 text-left">Show Time</th>
+                <th class="p-4 text-left">Total Seats</th>
+                <th class="p-4 text-left">Available Seats</th>
+                <th class="p-4 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="table-row border-t border-gray-700 hover:bg-gray-700 transition-colors" *ngFor="let showtime of filteredShowtimes">
+               <td class="p-4">{{showtime.id}}</td>
+               <td class="p-4">{{showtime.screen}}</td>
+               <td class="p-4">{{showtime.show_date | date:'mediumDate'}}</td>
+               <td class="p-4">{{showtime.show_time}}</td>
+               <td class="p-4">{{showtime.total_seats}}</td>
+               <td class="p-4">{{showtime.available_seats}}</td>
+               <td class="p-4 flex gap-2">
+                  <button type="button" class="action-btn p-2 rounded-full bg-blue-600 text-white tooltip" data-tooltip="Edit Showtime" 
+                          (click)="openEditForm(showtime)" [attr.aria-label]="'Edit showtime for ID ' + showtime.id">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button type="button" class="action-btn p-2 rounded-full bg-red-600 text-white tooltip" data-tooltip="Delete Showtime" 
+                          (click)="confirmDelete(showtime.id.toString())" [attr.aria-label]="'Delete showtime for ID ' + showtime.id">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                  <button type="button" class="action-btn p-2 rounded-full bg-green-600 text-white tooltip" data-tooltip="View Seat Bookings" 
+                          (click)="openSeatBookings(showtime)" [attr.aria-label]="'View seat bookings for ID ' + showtime.id">
+                    <i class="fas fa-chair"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="filteredShowtimes.length === 0">
+                <td colspan="13" class="p-4 text-center text-gray-400">No showtimes available. Add your first showtime!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add/Edit Showtime Modal -->
+        <div class="modal-overlay fixed inset-0 flex items-center justify-center z-50 animate-fadeIn" *ngIf="showFormModal" role="dialog" aria-labelledby="form-title" aria-modal="true">
+          <div class="modal-content p-8 rounded-xl max-w-2xl w-full animate-scaleIn max-h-[90vh] overflow-y-auto scrollbar-hide">
+            <div class="flex justify-between items-center mb-6">
+              <h2 id="form-title" class="text-3xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-clock"></i>
+                <span>{{isEditMode ? 'Edit Showtime' : 'Add Showtime'}}</span>
+              </h2>
+              <button (click)="closeFormModal()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <form #showtimeForm="ngForm" (ngSubmit)="confirmSaveShowtime()" aria-describedby="form-instructions">
+              <p id="form-instructions" class="sr-only">All fields are required. Please fill out the form to {{isEditMode ? 'edit' : 'add'}} a showtime.</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="mb-5">
+                  <label for="movie" class="block text-gray-300 font-semibold mb-2 flex items-center gap-1">
+                    <i class="fas fa-film text-sm"></i>
+                    <span>Movie</span>
+                  </label>
+                  <select id="movie" [(ngModel)]="selectedShowtime.movie_id" name="movie" required #movie="ngModel" 
+                          class="form-input w-full p-3 rounded-lg focus:outline-none" [disabled]="isEditMode || movieFilter != null">
+                    <option value="" disabled>Select Movie</option>
+                    <option *ngFor="let movie of movies" [value]="movie.id">{{movie.title}}</option>
+                  </select>
+                  <div class="text-red-400 text-sm mt-1" *ngIf="movie.invalid && movie.touched" role="alert">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Movie is required
+                  </div>
+                </div>
+                <div class="mb-5">
+                  <label for="screen" class="block text-gray-300 font-semibold mb-2 flex items-center gap-1">
+                    <i class="fas fa-desktop text-sm"></i>
+                    <span>Screen</span>
+                  </label>
+                  <select id="screen" [(ngModel)]="selectedShowtime.screen" name="screen" required #screen="ngModel" 
+                          class="form-input w-full p-3 rounded-lg focus:outline-none">
+                    <option value="" disabled>Select Screen</option>
+                    <option *ngFor="let screen of screens" [value]="screen">{{screen}}</option>
+                  </select>
+                  <div class="text-red-400 text-sm mt-1" *ngIf="screen.invalid && screen.touched" role="alert">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Screen is required
+                  </div>
+                </div>
+                <div class="mb-5">
+                  <label for="showDate" class="block text-gray-300 font-semibold mb-2 flex items-center gap-1">
+                    <i class="fas fa-calendar-day text-sm"></i>
+                    <span>Show Date</span>
+                  </label>
+                  <input type="date" id="showDate" [(ngModel)]="selectedShowtime.show_date" name="show_date" required #show_date="ngModel" 
+                         class="form-input w-full p-3 rounded-lg focus:outline-none" [min]="minDate">
+                  <div class="text-red-400 text-sm mt-1" *ngIf="show_date.invalid && show_date.touched" role="alert">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Date is required and must be today or later
+                  </div>
+                </div>
+                <div class="mb-5">
+                  <label for="showTime" class="block text-gray-300 font-semibold mb-2 flex items-center gap-1">
+                    <i class="fas fa-clock text-sm"></i>
+                    <span>Show Time</span>
+                  </label>
+                  <input type="time" id="showTime" [(ngModel)]="selectedShowtime.show_time" name="show_time" required #show_time="ngModel" 
+                         class="form-input w-full p-3 rounded-lg focus:outline-none" [min]="minTime">
+                  <div class="text-red-400 text-sm mt-1" *ngIf="show_time.invalid && show_time.touched" role="alert">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Time is required and must be current or later
+                  </div>
+                </div>
+                <div class="mb-5">
+                  <label for="totalSeats" class="block text-gray-300 font-semibold mb-2 flex items-center gap-1">
+                    <i class="fas fa-chair text-sm"></i>
+                    <span>Total Seats</span>
+                  </label>
+                  <input type="number" id="totalSeats" [(ngModel)]="selectedShowtime.total_seats" name="total_seats" required min="1" #total_seats="ngModel" 
+                         class="form-input w-full p-3 rounded-lg focus:outline-none">
+                  <div class="text-red-400 text-sm mt-1" *ngIf="total_seats.invalid && total_seats.touched" role="alert">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Total seats must be greater than 0
+                  </div>
+                </div>
+                <div class="mb-5">
+                  <label for="seatsAvailable" class="block text-gray-300 font-semibold mb-2 flex items-center gap-1">
+                    <i class="fas fa-ticket-alt text-sm"></i>
+                    <span>Seats Available</span>
+                    <span class="text-gray-500 text-sm ml-2">({{selectedShowtime.total_seats}} Total)</span>
+                  </label>
+                  <input type="number" id="seatsAvailable" [(ngModel)]="selectedShowtime.available_seats" name="available_seats" required min="0" 
+                         [max]="selectedShowtime.total_seats" #available_seats="ngModel" class="form-input w-full p-3 rounded-lg focus:outline-none">
+                  <div class="text-red-400 text-sm mt-1" *ngIf="available_seats.invalid && available_seats.touched" role="alert">
+                    <i class="fas fa-exclamation-circle mr-1"></i> Seats available must be between 0 and {{selectedShowtime.total_seats}}
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-4 mt-8 justify-end">
+                <button type="button" (click)="closeFormModal()" class="btn-secondary px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+                  <i class="fas fa-times"></i>
+                  <span>Cancel</span>
+                </button>
+                <button type="submit" [disabled]="!showtimeForm.valid" class="btn-primary px-6 py-3 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                  <i class="fas fa-save"></i>
+                  <span>{{ isEditMode ? 'Save Changes' : 'Add Showtime' }}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal-overlay fixed inset-0 flex items-center justify-center z-50 animate-fadeIn" *ngIf="showDeleteConfirm" role="dialog" aria-labelledby="delete-modal-title" aria-modal="true">
+          <div class="modal-content p-8 rounded-xl max-w-md w-full animate-scaleIn">
+            <div class="text-center">
+              <div class="text-red-500 text-5xl mb-4">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <h3 id="delete-modal-title" class="text-2xl font-bold mb-4 text-gradient">Confirm Deletion</h3>
+              <p class="text-gray-400 mb-6">Are you sure you want to delete this showtime? This action cannot be undone.</p>
+              <div class="flex gap-4 justify-center">
+                <button type="button" (click)="closeDeleteConfirm()" class="btn-secondary px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+                  <i class="fas fa-times"></i>
+                  <span>Cancel</span>
+                </button>
+                <button type="button" (click)="deleteShowtime()" class="btn-danger px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+                  <i class="fas fa-trash"></i>
+                  <span>Delete Permanently</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save Confirmation Modal -->
+        <div class="modal-overlay fixed inset-0 flex items-center justify-center z-50 animate-fadeIn" *ngIf="showSaveConfirm" role="dialog" aria-labelledby="save-modal-title" aria-modal="true">
+          <div class="modal-content p-8 rounded-xl max-w-md w-full animate-scaleIn text-center">
+            <div class="text-green-400 text-5xl mb-4">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 id="save-modal-title" class="text-2xl font-bold mb-4 text-gradient">Success!</h3>
+            <p class="text-gray-400 mb-6">{{lastAction}}</p>
+            <button type="button" (click)="closeSaveConfirm()" class="btn-primary px-6 py-3 rounded-lg font-medium mx-auto flex items-center gap-2">
+              <i class="fas fa-check"></i>
+              <span>OK</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Edit Confirmation Modal -->
+        <div class="modal-overlay fixed inset-0 flex items-center justify-center z-50 animate-fadeIn" *ngIf="showEditConfirm" role="dialog" aria-labelledby="edit-confirm-modal-title" aria-modal="true">
+          <div class="modal-content p-8 rounded-xl max-w-md w-full animate-scaleIn">
+            <div class="text-center">
+              <div class="text-yellow-400 text-5xl mb-4">
+                <i class="fas fa-exclamation-circle"></i>
+              </div>
+              <h3 id="edit-confirm-modal-title" class="text-2xl font-bold mb-4 text-gradient">Confirm Changes</h3>
+              <p class="text-gray-400 mb-6">Are you sure you want to save changes to this showtime?</p>
+              <div class="flex gap-4 justify-center">
+                <button type="button" (click)="closeEditConfirm()" class="btn-secondary px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+                  <i class="fas fa-times"></i>
+                  <span>Cancel</span>
+                </button>
+                <button type="button" (click)="saveShowtime()" class="btn-primary px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+                  <i class="fas fa-save"></i>
+                  <span>Confirm</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Seat Bookings Modal -->
+        <div class="modal-overlay fixed inset-0 flex items-center justify-center z-50 animate-fadeIn" *ngIf="showSeatBookings" role="dialog" aria-labelledby="seat-bookings-modal-title" aria-modal="true">
+          <div class="modal-content p-8 rounded-xl max-w-2xl w-full animate-scaleIn max-h-[90vh] overflow-y-auto scrollbar-hide">
+            <div class="flex justify-between items-center mb-6">
+              <h2 id="seat-bookings-modal-title" class="text-3xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-chair"></i>
+                <span>Seat Bookings for showtime ID {{selectedShowtimeForSeats?.id}}</span>
+              </h2>
+              <button (click)="closeSeatBookings()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+            <div class="text-center">
+              <p class="text-gray-300 mb-4">
+                Total Seats: {{selectedShowtimeForSeats?.total_seats}} |
+                Available: {{selectedShowtimeForSeats?.available_seats}} |
+                Booked: {{bookedSeats.length}}
+              </p>
+              <div class="flex flex-wrap justify-center gap-2">
+                <ng-container *ngFor="let i of [].constructor(selectedShowtimeForSeats?.total_seats || 0); let index = index">
+                  <div class="seat" [ngClass]="bookedSeats[index] ? 'seat-booked' : 'seat-available'"
+                       (click)="toggleSeatBooking(index)"
+                       [attr.aria-label]="bookedSeats[index] ? 'Booked seat' : 'Available seat'">
+                  </div>
+                </ng-container>
+              </div>
+              <div class="flex justify-center gap-4 mt-6">
+                <span class="flex items-center gap-2">
+                  <div class="seat seat-available"></div>
+                  <span>Available</span>
+                </span>
+                <span class="flex items-center gap-2">
+                  <div class="seat seat-booked"></div>
+                  <span>Booked</span>
+                </span>
+              </div>
+            </div>
+            <div class="flex justify-center mt-8">
+              <button type="button" (click)="closeSeatBookings()" class="btn-primary px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+                <i class="fas fa-times"></i>
+                <span>Close</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

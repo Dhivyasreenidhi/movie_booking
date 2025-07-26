@@ -1,0 +1,28 @@
+<div class="relative min-h-screen text-white">
+  <!-- Rich Gradient Base --><div class="relative min-h-screen overflow-hidden text-white">
+
+  <!-- Rich Gradient Base -->
+  <div class="absolute inset-0 z-0 bg-gradient-to-b from-[#5c0000]/95 via-black/85 to-[#5c0000]/95"></div>
+
+  <!-- Frosted Glass Layer (enhanced opacity + blur) -->
+  <div class="absolute inset-0 z-10 backdrop-blur-lg bg-black/20 shadow-inner shadow-[#ff000040]"></div>
+
+  <!-- Soft Glow Overlay for richness -->
+  <div class="absolute inset-0 z-20 pointer-events-none bg-gradient-to-br from-red-800/10 via-transparent to-yellow-500/10 mix-blend-overlay"></div>
+
+  <!-- Main Content Area -->
+  <div class="relative z-30">
+    <ng-container *ngIf="!isLoggedIn">
+      <app-header></app-header>
+    </ng-container>
+    <ng-container *ngIf="isLoggedIn">
+      <app-headers></app-headers>
+    </ng-container>
+    <app-banners></app-banners>
+    <app-now-streaming></app-now-streaming>
+    <app-coming-soon></app-coming-soon>
+    <app-trailers></app-trailers>
+    <app-offer></app-offer>
+    <app-footer></app-footer> 
+  </div>
+</div>

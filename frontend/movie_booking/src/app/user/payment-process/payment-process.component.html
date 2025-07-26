@@ -1,0 +1,121 @@
+<!-- Payment Modal -->
+<div *ngIf="showPayment" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
+  <div class="bg-gray-800 p-4 sm:p-8 rounded-2xl max-w-2xl w-full shadow-2xl">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl sm:text-3xl font-bold text-white">Payment - {{bookingInfo.theater}} ({{bookingInfo.time}})</h2>
+      <button (click)="showPayment = false" class="text-gray-400 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
+    </div>
+
+    <!-- Countdown Timer -->
+    <div class="text-center mb-6">
+      <p class="text-white text-lg">
+        Complete payment in: 
+        <span class="font-bold">{{timerMinutes}}:{{timerSeconds | number:'2.0'}}</span>
+      </p>
+    </div>
+
+    <!-- Payment Options -->
+    <div class="mb-6">
+      <h3 class="text-xl font-semibold text-white mb-4">Select Payment Method</h3>
+      <div class="grid grid-cols-3 gap-4">
+        <button (click)="selectPaymentMethod('upi')" 
+                [ngClass]="{'bg-blue-700': paymentMethod === 'upi', 'bg-gray-600': paymentMethod !== 'upi'}"
+                class="p-4 rounded-lg text-white font-semibold transition-transform transform hover:scale-105">
+          UPI
+        </button>
+        <button (click)="selectPaymentMethod('card')" 
+                [ngClass]="{'bg-blue-700': paymentMethod === 'card', 'bg-gray-600': paymentMethod !== 'card'}"
+                class="p-4 rounded-lg text-white font-semibold transition-transform transform hover:scale-105">
+          Card
+        </button>
+        <button (click)="selectPaymentMethod('netbanking')" 
+                [ngClass]="{'bg-blue-700': paymentMethod === 'netbanking', 'bg-gray-600': paymentMethod !== 'netbanking'}"
+                class="p-4 rounded-lg text-white font-semibold transition-transform transform hover:scale-105">
+          Net Banking
+        </button>
+      </div>
+    </div>
+
+    <!-- UPI Form -->
+    <div *ngIf="paymentMethod === 'upi'" class="mb-6">
+      <label class="block text-white mb-2">UPI ID</label>
+      <input [(ngModel)]="upiId" type="text" placeholder="example@upi" 
+             class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
+    </div>
+
+    <!-- Card Form -->
+    <div *ngIf="paymentMethod === 'card'" class="mb-6">
+      <label class="block text-white mb-2">Card Number</label>
+      <input [(ngModel)]="cardNumber" type="text" placeholder="1234 5678 9012 3456" 
+             class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
+      <div class="grid grid-cols-2 gap-4 mt-4">
+        <div>
+          <label class="block text-white mb-2">Expiry</label>
+          <input [(ngModel)]="cardExpiry" type="text" placeholder="MM/YY" 
+                 class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
+        </div>
+        <div>
+          <label class="block text-white mb-2">CVV</label>
+          <input [(ngModel)]="cardCvv" type="text" placeholder="123" 
+                 class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
+        </div>
+      </div>
+    </div>
+
+    <!-- Net Banking -->
+    <div *ngIf="paymentMethod === 'netbanking'" class="mb-6">
+      <label class="block text-white mb-2">Select Bank</label>
+      <select [(ngModel)]="bank" 
+              class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
+        <option value="">Select Bank</option>
+        <option value="sbi">State Bank of India</option>
+        <option value="hdfc">HDFC Bank</option>
+        <option value="icici">ICICI Bank</option>
+      </select>
+    </div>
+
+    <!-- Payment Actions -->
+    <div class="flex justify-between">
+      <button (click)="showPayment = false" 
+              class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">
+        Cancel
+      </button>
+      <button (click)="processPayment()" 
+              class="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105" 
+              [disabled]="isProcessing">
+        <span *ngIf="!isProcessing">Pay ₹{{bookingInfo.total}}</span>
+        <span *ngIf="isProcessing" class="flex items-center">
+          <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+          </svg>
+          Processing...
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div *ngIf="showConfirmation" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
+  <div class="bg-gray-800 p-4 sm:p-8 rounded-2xl max-w-2xl w-full shadow-2xl">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl sm:text-3xl font-bold text-white">Booking Confirmed!</h2>
+      <button (click)="showConfirmation = false" class="text-gray-400 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
+    </div>
+    <div class="bg-gray-700 p-6 rounded-lg">
+      <p class="text-white text-lg mb-2"><strong>Movie:</strong> {{bookingInfo.movie}}</p>
+      <p class="text-white text-lg mb-2"><strong>Theater:</strong> {{bookingInfo.theater}}</p>
+      <p class="text-white text-lg mb-2"><strong>Time:</strong> {{bookingInfo.time}}</p>
+      <p class="text-white text-lg mb-2"><strong>Seats:</strong> {{bookingInfo.seats?.join(', ')}}</p>
+      <p class="text-white text-lg mb-2"><strong>Total Paid:</strong> ₹{{bookingInfo.total}}</p>
+      <p class="text-white text-lg"><strong>Booking ID:</strong> {{bookingId}}</p>
+    </div>
+    <div class="flex justify-end mt-6">
+      <button (click)="showConfirmation = false" 
+              class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">
+        Close
+      </button>
+    </div>
+  </div>
+</div>

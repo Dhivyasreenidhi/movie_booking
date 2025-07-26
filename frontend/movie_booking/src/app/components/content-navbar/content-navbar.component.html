@@ -1,0 +1,55 @@
+<nav class="text-white shadow-lg">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="flex justify-between h-16">
+      <div class="flex items-center">
+        <span class="text-xl font-bold">Content Management</span>
+      </div>
+      <div class="flex space-x-4">
+        <a
+          class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
+          [class.bg-blue-600]="activeTab === 'banner'"
+          [class.hover:bg-gray-700]="activeTab !== 'banner'"
+          (click)="selectTab('banner')"
+        >
+          Banner
+        </a>
+
+        <a
+          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          routerLink="/content-now"
+          routerLinkActive="bg-blue-600"
+          (click)="selectTab('streaming')"
+        >
+          Now Streaming
+        </a>
+
+        <a
+          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          routerLink="/content-coming"
+          routerLinkActive="bg-blue-600"
+          (click)="selectTab('coming')"
+        >
+          Coming Soon
+        </a>
+
+        <a
+          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          routerLink="/content-trailer"
+          routerLinkActive="bg-blue-600"
+          (click)="selectTab('trailer')"
+        >
+          Trailers
+        </a>
+
+        <a
+          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          routerLink="/content-offer"
+          routerLinkActive="bg-blue-600"
+          (click)="selectTab('offer')"
+        >
+          Offers
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,85 @@
+<div class="p-6 bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto" role="dialog" aria-labelledby="dialog-title">
+  <h2 id="dialog-title" class="text-xl font-semibold mb-4 text-gray-100">{{ data.employee ? 'Edit' : 'Add' }} Employee</h2>
+  <form [formGroup]="employeeForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    <!-- Name -->
+    <mat-form-field class="w-full">
+      <mat-label>Name <span class="text-red-500">*</span></mat-label>
+      <input matInput formControlName="name" required placeholder="Enter employee name">
+      <mat-error *ngIf="employeeForm.get('name')?.hasError('required')">
+        Name is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Email -->
+    <mat-form-field class="w-full">
+      <mat-label>Email <span class="text-red-500">*</span></mat-label>
+      <input matInput formControlName="email" required placeholder="Enter email address">
+      <mat-error *ngIf="employeeForm.get('email')?.hasError('required')">
+        Email is required
+      </mat-error>
+      <mat-error *ngIf="employeeForm.get('email')?.hasError('email')">
+        Please enter a valid email address
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Role -->
+    <mat-form-field class="w-full">
+      <mat-label>Role <span class="text-red-500">*</span></mat-label>
+      <input matInput formControlName="role" required placeholder="Enter employee role">
+      <mat-error *ngIf="employeeForm.get('role')?.hasError('required')">
+        Role is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Department -->
+    <mat-form-field class="w-full">
+      <mat-label>Department <span class="text-red-500">*</span></mat-label>
+      <mat-select formControlName="department" required placeholder="Select department">
+        <mat-option value="HR">HR</mat-option>
+        <mat-option value="IT">IT</mat-option>
+        <mat-option value="Marketing">Marketing</mat-option>
+        <mat-option value="Sales">Sales</mat-option>
+        <mat-option value="Finance">Finance</mat-option>
+      </mat-select>
+      <mat-error *ngIf="employeeForm.get('department')?.hasError('required')">
+        Department is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Hire Date -->
+    <mat-form-field class="w-full">
+      <mat-label>Hire Date <span class="text-red-500">*</span></mat-label>
+      <input matInput type="date" formControlName="hireDate" required [min]="minHireDate">
+      <mat-error *ngIf="employeeForm.get('hireDate')?.hasError('required')">
+        Hire date is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Status -->
+    <mat-form-field class="w-full">
+      <mat-label>Status <span class="text-red-500">*</span></mat-label>
+      <mat-select formControlName="status" required placeholder="Select status">
+        <mat-option value="active">Active</mat-option>
+        <mat-option value="inactive">Inactive</mat-option>
+      </mat-select>
+      <mat-error *ngIf="employeeForm.get('status')?.hasError('required')">
+        Status is required
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Buttons -->
+    <div class="flex justify-end space-x-3 mt-6">
+      <button type="button" (click)="dialogRef.close()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition duration-200" aria-label="Cancel">
+        Cancel
+      </button>
+      <button type="submit" [disabled]="employeeForm.invalid" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition duration-200" aria-label="Submit {{ data.employee ? 'edited' : 'new' }} employee">
+        {{ data.employee ? 'Save' : 'Add' }}
+      </button>
+    </div>
+
+    <!-- General Error Feedback -->
+    <div *ngIf="employeeForm.invalid && employeeForm.touched" class="text-red-500 text-sm mt-2" role="alert">
+      Please fix the errors above before submitting.
+    </div>
+  </form>
+</div>

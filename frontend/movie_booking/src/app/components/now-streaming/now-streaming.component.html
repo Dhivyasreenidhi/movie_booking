@@ -1,0 +1,32 @@
+<app-header></app-header>
+<!-- Same gradient background as homepage -->
+<div class=" text-white w-full p-4 px-4 md:px-8 lg:px-12 xl:px-20 py-5">
+    <h1 class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)] ">MOVIES</h1>
+    
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 py-4">
+        <div *ngFor="let movie of movies" 
+             class="text-center flex flex-col hover:scale-105 transition-transform duration-300 group">
+            <div class="relative overflow-hidden rounded-lg shadow-lg">
+                <img [src]="movie.image" [alt]="movie.title" 
+                     class="w-full h-110 object-cover rounded-lg group-hover:opacity-90 transition-opacity duration-300">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent 
+                           opacity-0 group-hover:opacity-100 transition-opacity duration-300 
+                           flex items-end p-4">
+                    <div class="w-full">
+                        <h3 class="text-lg font-semibold text-white mb-2">{{movie.title}}</h3>
+                        <div class="flex items-center text-yellow-400 mb-2">
+                            <span class="mr-1">{{movie.rating}}</span>
+                            <span *ngIf="movie.votes" class="text-white text-sm ml-2">{{movie.votes}}</span>
+                        </div>
+                        <a [routerLink]="'/moviess'" 
+   class="w-full bg-gradient-to-r from-red-700 to-red-900 hover:bg-red-700 text-white py-2 rounded-md 
+   transition-colors duration-300 inline-block">
+    Book Now
+</a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>

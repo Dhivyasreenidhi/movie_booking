@@ -1,0 +1,36 @@
+<div *ngIf="currentStep === 1" class="mb-8 animate__animated animate__fadeIn">
+  <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+    <i class="far fa-clock"></i> Select Showtime
+  </h3>
+  
+  <div class="mb-4">
+    <div class="flex flex-wrap gap-2">
+      <button *ngFor="let filter of timeFilters" 
+              [class.bg-blue-600]="timeFilter === filter.value"
+              class="px-3 py-1 rounded-full hover:bg-gray-700 transition text-sm"
+              (click)="filterShowtimes(filter.value)">
+        {{ filter.label }}
+      </button>
+    </div>
+  </div>
+  
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+    <button *ngFor="let time of filteredShowtimes" 
+            [class.bg-green-600]="time.available && selectedTime === time.time" 
+            [class.bg-gray-700]="time.available && selectedTime !== time.time"
+            [class.bg-gray-800]="!time.available"
+            [class.opacity-50]="!time.available"
+            class="p-3 rounded-lg hover:scale-105 transition text-center relative"
+            (click)="selectShowtime(time)" 
+            [disabled]="!time.available">
+      <div class="font-bold text-sm">{{ time.time }}</div>
+      <div class="text-xs">{{ time.type }}</div>
+      <div class="text-xs mt-1">{{ time.price | currency }}</div>
+      <div *ngIf="time.available" class="text-xs text-green-400">{{ time.seatsLeft }} seats left</div>
+      <div *ngIf="!time.available" class="text-xs text-red-400">Sold Out</div>
+      <div *ngIf="time.discount" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">
+        -{{ time.discount }}%
+      </div>
+    </button>
+  </div>
+</div>

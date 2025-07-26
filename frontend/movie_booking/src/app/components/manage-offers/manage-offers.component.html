@@ -1,0 +1,490 @@
+<!-- Styles and layout remain unchanged. Only document-level tags removed for Angular compatibility. -->
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-light: #ef4444;
+      --primary-dark: #b91c1c;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #111827;
+      --light: #f9fafb;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color:  #030712;
+      color: #f3f4f6;
+      min-height: 165vh;
+    }
+    
+    .sidebar-item {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar-item:hover {
+      transform: translateX(4px);
+      background-color: rgba(220, 38, 38, 0.1);
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-badge {
+      transition: all 0.2s ease;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .chart-container {
+      transition: all 0.3s ease;
+    }
+    
+    .tab-active {
+      position: relative;
+      color: var(--primary);
+    }
+    
+    .tab-active:after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: var(--primary);
+      border-radius: 3px;
+    }
+    
+    .user-avatar {
+      transition: transform 0.3s ease;
+    }
+    
+    .user-avatar:hover {
+      transform: scale(1.1);
+    }
+    
+    .table-row {
+      transition: background-color 0.2s ease;
+    }
+    
+    .table-row:hover {
+      background-color: rgba(31, 41, 55, 0.8);
+    }
+    
+    .dropdown-menu {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* Layout styles */
+    .main-container {
+      display: grid;
+      grid-template-areas: 
+        "navbar navbar"
+        "sidebar content";
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    app-nav-bar {
+      grid-area: navbar;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    app-sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 0;
+  align-self: start; /* Ensures it aligns at the top of the grid area */
+}
+
+    .content-area {
+      grid-area: content;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+  </style>
+
+<body>
+  <div class="main-container">
+    <!-- Header -->
+    <app-nav-bar></app-nav-bar>
+    
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+
+    <!-- Main Content -->
+    <div class="content-area">
+      <!-- Notifications -->
+      <div class="fixed top-4 right-4 space-y-2 z-50">
+        <div *ngFor="let notification of notifications" 
+             class="notification px-4 py-2 rounded-lg shadow-lg {{ notification.type === 'success' ? 'bg-green-500' : 'bg-red-500' }} text-white animate-fadeIn">
+          {{ notification.message }}
+        </div>
+      </div>
+
+      <div class="container mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-8">
+          <h1 class="text-3xl font-bold text-red-500">Offer Management</h1>
+          <button 
+            (click)="toggleAddOfferForm()"
+            class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition duration-200 flex items-center">
+            <i class="fas fa-plus mr-2"></i> Add New Offer
+          </button>
+        </div>
+
+        <!-- Add Offer Form -->
+        <div *ngIf="showAddOfferForm" class="mb-6 bg-gray-800 p-6 rounded-lg shadow-lg animate-slideIn">
+          <h2 class="text-xl font-semibold mb-4">Add New Offer</h2>
+          <form (ngSubmit)="addOffer()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Offer Code*</label>
+                <input [(ngModel)]="newOffer.code" name="code" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Description*</label>
+                <textarea [(ngModel)]="newOffer.description" name="description" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white"></textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Discount Type</label>
+                <select [(ngModel)]="newOffer.discountType" name="discountType" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                  <option value="percentage">Percentage</option>
+                  <option value="fixed">Fixed Amount</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Discount Value*</label>
+                <input type="number" [(ngModel)]="newOffer.discountValue" name="discountValue" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Applicable On*</label>
+                <select [(ngModel)]="newOffer.applicableOn" name="applicableOn" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                  <option value="all">All</option>
+                  <option value="specific">Specific</option>
+                  <option value="category">Category</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Categories</label>
+                <input type="text" [(ngModel)]="newOffer.categories" name="categories" placeholder='e.g. ["family","group"]' class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Minimum Purchase (₹)</label>
+                <input type="number" [(ngModel)]="newOffer.minPurchase" name="minPurchase" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Valid From*</label>
+                <input type="date" [(ngModel)]="newOffer.validFrom" name="validFrom" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Valid To*</label>
+                <input type="date" [(ngModel)]="newOffer.validTo" name="validTo" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Max Discount</label>
+                <input type="number" [(ngModel)]="newOffer.maxDiscount" name="maxDiscount" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Usage Limit</label>
+                <input type="number" [(ngModel)]="newOffer.usageLimit" name="usageLimit" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Used Count</label>
+                <input type="number" [(ngModel)]="newOffer.usedCount" name="usedCount" class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div class="flex items-center">
+                <input type="checkbox" [(ngModel)]="newOffer.isActive" name="isActive" id="isActive" class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded">
+                <label for="isActive" class="ml-2 block text-sm text-gray-300">Active Offer</label>
+              </div>
+            </div>
+            <div class="md:col-span-2 flex justify-end space-x-3">
+              <button type="button" (click)="cancelForm()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition duration-200">Cancel</button>
+              <button type="submit" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded transition duration-200">Save Offer</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Edit Offer Form -->
+        <div *ngIf="showEditOfferForm && selectedOffer" class="mb-6 bg-gray-800 p-6 rounded-lg shadow-lg animate-slideIn">
+          <h2 class="text-xl font-semibold mb-4">Edit Offer: {{selectedOffer.code}}</h2>
+          <form (ngSubmit)="updateOffer()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Offer Code*</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="selectedOffer.code" 
+                  name="code"
+                  [readonly]="true"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white cursor-not-allowed">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Description*</label>
+                <textarea 
+                  [(ngModel)]="selectedOffer.description" 
+                  name="description"
+                  [readonly]="true"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white cursor-not-allowed"></textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Discount Type</label>
+                <select 
+                  [(ngModel)]="selectedOffer.discountType" 
+                  name="discountType"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+                  <option value="percentage">Percentage</option>
+                  <option value="fixed">Fixed Amount</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Discount Value*</label>
+                <input 
+                  type="number" 
+                  [(ngModel)]="selectedOffer.discountValue" 
+                  name="discountValue"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+            </div>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Minimum Purchase (₹)</label>
+                <input 
+                  type="number" 
+                  [(ngModel)]="selectedOffer.minPurchase" 
+                  name="minPurchase"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Valid From*</label>
+                <input 
+                  type="date" 
+                  [ngModel]="selectedOffer.validFrom | date:'yyyy-MM-dd'" 
+                  (ngModelChange)="selectedOffer.validFrom = $event"
+                  name="validFrom"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Valid To*</label>
+                <input 
+                  type="date" 
+                  [ngModel]="selectedOffer.validTo | date:'yyyy-MM-dd'" 
+                  (ngModelChange)="selectedOffer.validTo = $event"
+                  name="validTo"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white">
+              </div>
+              <div class="flex items-center">
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="selectedOffer.isActive" 
+                  name="isActive"
+                  id="editIsActive"
+                  class="h-4 w-4 text-primary focus:ring-primary border-gray-600 rounded">
+                <label for="editIsActive" class="ml-2 block text-sm text-gray-300">Active Offer</label>
+              </div>
+            </div>
+            <div class="md:col-span-2 flex justify-end space-x-3">
+              <button 
+                type="button"
+                (click)="cancelForm()"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition duration-200">
+                Cancel
+              </button>
+              <button 
+                type="submit"
+                class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded transition duration-200">
+                Update Offer
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="mb-6 bg-gray-800 p-6 rounded-lg shadow-lg animate-slideIn">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Status</label>
+              <select 
+                [(ngModel)]="filterStatus"
+                class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-primary text-white transition duration-200">
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Search</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  (ngModelChange)="onSearchChange($event)"
+                  [(ngModel)]="searchTerm"
+                  placeholder="Search by code or description"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-primary text-white transition duration-200"
+                >
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offers Table -->
+        <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden animate-slideIn">
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-700">
+              <thead class="bg-gray-900">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Code</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Discount</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Validity</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Usage</th>
+                  <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-gray-800 divide-y divide-gray-700">
+                <tr *ngFor="let offer of paginatedOffers" class="hover:bg-gray-750 transition duration-150">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="font-medium text-white">{{offer.code}}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-300">{{offer.description}}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-primary">{{formatDiscount(offer)}}</div>
+                    <div *ngIf="offer.minPurchase" class="text-xs text-gray-400">Min. ₹{{offer.minPurchase}}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-300">{{offer.validFrom | date:'shortDate'}} - {{offer.validTo | date:'shortDate'}}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{getStatusClass(offer.isActive, offer.validFrom, offer.validTo)}}">
+                      {{getStatusText(offer.isActive, offer.validFrom, offer.validTo)}}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-300">
+                      {{offer.usedCount}}<span *ngIf="offer.usageLimit">/{{offer.usageLimit}}</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button 
+                      (click)="showViewOffer(offer)"
+                      class="text-blue-400 hover:text-blue-500 mr-3 transition duration-200" title="View Offer">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <button 
+                      (click)="selectOffer(offer)"
+                      class="text-primary hover:text-primary-dark mr-3 transition duration-200" title="Edit Offer">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button 
+                      (click)="confirmDelete(offer)"
+                      class="text-red-400 hover:text-red-500 transition duration-200" title="Delete Offer">
+                      <i class="fas fa-trash"></i>
+                    </button>
+        <!-- View Offer Modal -->
+        <div *ngIf="viewOffer" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 animate-slideIn">
+          <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+              <h2 class="text-4xl text-orange-400 font-semibold text-center mb-4">Offer Details</h2>
+              <div class="mb-2 text-center"><span class="font-bold text-gray-300">Code:</span> <span class="text-white">{{viewOffer.code}}</span></div>
+              <div class="mb-2 text-center"><span class="font-bold text-gray-300">Description:</span> <span class="text-white">{{viewOffer.description}}</span></div>
+              <div class="mb-2 text-center"><span class="font-bold text-gray-300">Discount:</span> <span class="text-white">{{formatDiscount(viewOffer)}}</span></div>
+              <div class="mb-2 text-center"><span class="font-bold text-gray-300">Min Purchase:</span> <span class="text-white">{{viewOffer.minPurchase || '-'}}</span></div>
+              <div class="mb-2 text-center"><span class="font-bold text-gray-300">Validity:</span> <span class="text-white">{{viewOffer.validFrom | date:'shortDate'}} - {{viewOffer.validTo | date:'shortDate'}}</span></div>
+              <div class="mb-2 text-center"><span class="font-bold text-gray-300">Status:</span> <span class="text-white">{{getStatusText(viewOffer.isActive, viewOffer.validFrom, viewOffer.validTo)}}</span></div>
+              <div class="mb-2 text-center"><span class="font-bold text-gray-300">Usage:</span> <span class="text-white">{{viewOffer.usedCount}}<span *ngIf="viewOffer.usageLimit">/{{viewOffer.usageLimit}}</span></span></div>
+              <div class="flex justify-end mt-6">
+                <button (click)="cancelForm()" class="bg-gray-600 hover:bg-gray-700 text-orange-400 px-4 py-2 rounded transition duration-200">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+                  </td>
+                </tr>
+                <tr *ngIf="filteredOffers.length === 0">
+                  <td colspan="7" class="px-6 py-4 text-center text-gray-400">No offers found</td>
+                </tr>
+              </tbody>
+            </table>
+          <!-- Pagination Controls -->
+          <div *ngIf="totalPages > 1" class="flex justify-center items-center py-4">
+            <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" class="px-3 py-1 mx-1 rounded bg-gray-700 text-white disabled:opacity-50">Prev</button>
+            <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+              <button (click)="goToPage(i + 1)" [class.bg-primary]="currentPage === (i + 1)" class="px-3 py-1 mx-1 rounded text-white" [ngClass]="{'bg-gray-700': currentPage !== (i + 1), 'bg-primary': currentPage === (i + 1)}">{{i + 1}}</button>
+            </ng-container>
+            <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" class="px-3 py-1 mx-1 rounded bg-gray-700 text-white disabled:opacity-50">Next</button>
+          </div>
+          </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div *ngIf="showDeleteConfirmation" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 animate-slideIn">
+          <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+              <h2 class="text-2xl font-semibold mb-4">Confirm Deletion</h2>
+              <p class="mb-6">Are you sure you want to delete offer "{{ offerToDelete?.code }}"? This action cannot be undone.</p>
+              <div class="flex justify-end space-x-3">
+                <button 
+                  (click)="cancelDelete()"
+                  class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition duration-200">
+                  Cancel
+                </button>
+                <button 
+                  (click)="deleteOffer()"
+                  class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-200">
+                  Delete Offer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+     
+    
+
+
+
+
+
+
+
+

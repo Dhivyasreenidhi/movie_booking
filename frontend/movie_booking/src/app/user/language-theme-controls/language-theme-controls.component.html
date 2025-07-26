@@ -1,0 +1,56 @@
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+  <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+    <div class="w-full sm:w-auto">
+      <label for="language" class="block mb-1 text-sm">Language:</label>
+      <select id="language" [(ngModel)]="selectedLanguage" (ngModelChange)="changeLanguage()" 
+              class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600 focus:ring-2 focus:ring-blue-500">
+        <option *ngFor="let lang of languages" [value]="lang.value">{{ lang.label }}</option>
+      </select>
+    </div>
+    <div class="w-full sm:w-auto">
+      <label for="subtitle" class="block mb-1 text-sm">Subtitles:</label>
+      <select id="subtitle" [(ngModel)]="selectedSubtitle" 
+              class="w-full p-2 bg-gray-800 text-white rounded border border-gray-600 focus:ring-2 focus:ring-blue-500">
+        <option *ngFor="let sub of subtitles" [value]="sub.value">{{ sub.label }}</option>
+      </select>
+    </div>
+  </div>
+  <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+    <button (click)="onThemeToggle()" class="p-3 bg-gray-800 rounded-full hover:bg-gray-700 transition" 
+            aria-label="Toggle theme">
+      <i class="fas" [ngClass]="isLightTheme ? 'fa-moon text-yellow-400' : 'fa-sun text-yellow-300'"></i>
+    </button>
+    <button (click)="toggleAccessibilityMenu()" class="p-3 bg-gray-800 rounded-full hover:bg-gray-700 transition" 
+            aria-label="Accessibility options">
+      <i class="fas fa-universal-access text-blue-400"></i>
+    </button>
+  </div>
+</div>
+
+<div *ngIf="showAccessibilityMenu" class="mb-6 p-4 bg-gray-800 rounded-lg animate__animated animate__fadeIn">
+  <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+    <i class="fas fa-universal-access"></i> Accessibility Options
+  </h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" [(ngModel)]="highContrastMode" (change)="toggleHighContrast()">
+        <span class="text-sm">High Contrast Mode</span>
+      </label>
+    </div>
+    <div>
+      <label class="flex items-center gap-2">
+        <input type="checkbox" [(ngModel)]="dyslexiaMode" (change)="toggleDyslexiaMode()">
+        <span class="text-sm">Dyslexia-Friendly Font</span>
+      </label>
+    </div>
+    <div>
+      <label class="block mb-1 text-sm">Text Size:</label>
+      <div class="flex gap-2">
+        <button (click)="decreaseFontSize()" class="p-1 bg-gray-700 rounded text-sm">A-</button>
+        <button (click)="resetFontSize()" class="p-1 bg-gray-700 rounded text-sm">A</button>
+        <button (click)="increaseFontSize()" class="p-1 bg-gray-700 rounded text-sm">A+</button>
+      </div>
+    </div>
+  </div>
+</div>

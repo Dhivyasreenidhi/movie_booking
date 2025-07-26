@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KG Cinemas - Sign Up</title>
+    <link rel="icon" type="image/png" href="./IMAGES/logo.png">
+    
+    <style>
+        body {
+            background-image: url('https://1.bp.blogspot.com/-jNjMPIhIj28/VmPkyS46T8I/AAAAAAAAEq4/-cr-ROZIsKM/s1600/111111.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(252, 250, 250, 0.4);
+            z-index: -1;
+        }
+        .overlay {
+            background: rgba(0, 0, 0, 0.6);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .popup {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Navbar -->
+    <br><br><br><br><br><br><br>
+    
+
+    <!-- Sign-Up Form -->
+    <form id="signupForm" class="w-96 p-6 bg-black bg-opacity-85 rounded-lg mx-auto mt-10">
+        <h2 class="text-2xl font-bold text-center">SIGN UP</h2>
+        <label class="block mt-4">PHONE NUMBER:<span class="text-red-500">*</span></label>
+        <input type="text" id="phone" class="w-full p-2 mt-2 text-black rounded-md" placeholder="Enter your phone number" required pattern="\d{10}" title="Phone number must be 10 digits">
+        <button type="button" id="getOtpBtn" class="w-full bg-red-600 text-white py-2 mt-4 rounded-md hover:bg-red-800">GET OTP</button>
+        
+        <div id="otpSection" class="hidden mt-4">
+            <label class="block">ENTER OTP:<span class="text-red-500">*</span></label>
+            <input type="text" id="otp" class="w-full p-2 mt-2 text-black rounded-md" placeholder="Enter OTP" required pattern="\d{6}" title="OTP must be 6 digits">
+            <p id="timer" class="mt-2">OTP expires in: <span id="countdown">2:00</span></p>
+            <button type="button" id="resendOtpBtn" class="w-full bg-gray-600 text-white py-2 mt-2 rounded-md hover:bg-gray-800 hidden">RESEND OTP</button>
+        </div>
+
+        <div id="adminIdSection" class="hidden mt-4">
+            <label class="block">ADMIN ID:</label> <!-- Made optional -->
+            <input type="text" id="adminId" class="w-full p-2 mt-2 text-black rounded-md" placeholder="Enter Admin ID (optional)">
+        </div>
+
+        <button type="button" id="submitBtn" class="w-full bg-green-600 text-white py-2 mt-4 rounded-md hover:bg-green-800 hidden">SUBMIT</button>
+    </form>
+
+    <!-- Success Popup -->
+    <div id="popupOverlay" class="overlay">
+        <div class="popup">
+            <h2 class="text-2xl font-bold">Success!</h2>
+            <p class="mt-2 text-black">Your phone has signed up successfully.</p>
+            <button id="okBtn" class="bg-green-600 text-white py-2 px-4 mt-4 rounded-md hover:bg-green-800">OK</button>
+        </div>
+    </div>
+
+    <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+    <!-- Footer -->
+    
+    <!-- JavaScript -->
+    <script>
+        let timer;
+        let timeLeft = 120;
+        const getOtpBtn = document.getElementById("getOtpBtn");
+        const resendOtpBtn = document.getElementById("resendOtpBtn");
+        const otpSection = document.getElementById("otpSection");
+        const countdownElement = document.getElementById("countdown");
+        const submitBtn = document.getElementById("submitBtn");
+        const popupOverlay = document.getElementById("popupOverlay");
+        const okBtn = document.getElementById("okBtn");
+        const phoneInput = document.getElementById("phone");
+        const otpInput = document.getElementById("otp");
+        const adminIdSection = document.getElementById("adminIdSection");
+        const adminIdInput = document.getElementById("adminId");
+
+        function startTimer() {
+            timeLeft = 120;
+            countdownElement.innerText = "2:00";
+            resendOtpBtn.classList.add("hidden");
+
+            timer = setInterval(() => {
+                timeLeft--;
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                countdownElement.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    resendOtpBtn.classList.remove("hidden");
+                }
+            }, 1000);
+        }
+
+        getOtpBtn.addEventListener("click", () => {
+            if (!phoneInput.value.match(/^\d{10}$/)) {
+                alert("Please enter a valid 10-digit phone number.");
+                return;
+            }
+            otpSection.classList.remove("hidden");
+            startTimer();
+        });
+
+        otpInput.addEventListener("input", () => {
+            if (otpInput.value.match(/^\d{6}$/)) {
+                adminIdSection.classList.remove("hidden");
+                submitBtn.classList.remove("hidden");
+            }
+        });
+
+        submitBtn.addEventListener("click", () => {
+            if (!otpInput.value.match(/^\d{6}$/)) {
+                alert("Please enter a valid 6-digit OTP.");
+                return;
+            }
+            // Admin ID is optional – no validation required
+            clearInterval(timer);
+            popupOverlay.style.display = "flex";
+        });
+
+        okBtn.addEventListener("click", () => {
+            popupOverlay.style.display = "none";
+            window.location.href = "Home.html";
+        });
+    </script>
+</body>
+</html>

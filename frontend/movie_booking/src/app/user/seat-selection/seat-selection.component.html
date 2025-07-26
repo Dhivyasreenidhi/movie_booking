@@ -1,0 +1,103 @@
+<div *ngIf="currentStep === 2 && selectedTime" class="mb-8 animate__animated animate__fadeIn">
+  <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+    <i class="fas fa-chair"></i> Select Seats
+  </h3>
+  
+  <div class="flex flex-col md:flex-row gap-6">
+    <!-- Theater Map -->
+    <div class="flex-1">
+      <div class="bg-gray-900 p-4 rounded-lg mb-4">
+        <div class="text-center mb-4 text-sm font-semibold">SCREEN</div>
+        <div class="h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mb-8"></div>
+        
+        <!-- Seat Map -->
+        <div class="grid grid-cols-10 gap-2 mb-4 mx-auto" style="max-width: 500px;">
+          <button *ngFor="let seat of seats" 
+                  [class.bg-green-600]="seat.available && !seat.selected" 
+                  [class.bg-blue-600]="seat.selected" 
+                  [class.bg-gray-700]="!seat.available"
+                  [class.border-2]="seat.type === 'premium'"
+                  [class.border-yellow-400]="seat.type === 'premium'"
+                  class="w-8 h-8 rounded hover:scale-110 transition flex items-center justify-center relative"
+                  (click)="toggleSeat(seat)"
+                  [disabled]="!seat.available"
+                  [attr.aria-label]="'Seat ' + seat.id + (seat.available ? ' available' : ' unavailable')">
+            {{ seat.id }}
+            <span *ngIf="seat.type === 'premium'" class="absolute -top-2 -right-2 text-yellow-400 text-xs">★</span>
+          </button>
+        </div>
+        
+        <div class="flex flex-wrap justify-center gap-3 mt-4 text-sm">
+          <span class="flex items-center"><span class="w-4 h-4 bg-green-600 mr-2 rounded"></span>Available</span>
+          <span class="flex items-center"><span class="w-4 h-4 bg-blue-600 mr-2 rounded"></span>Selected</span>
+          <span class="flex items-center"><span class="w-4 h-4 bg-gray-700 mr-2 rounded"></span>Occupied</span>
+          <span class="flex items-center"><span class="w-4 h-4 bg-transparent border-2 border-yellow-400 mr-2 rounded"></span>Premium</span>
+        </div>
+      </div>
+      
+      <!-- Seat Type Info -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <div class="bg-gray-800 p-3 rounded-lg">
+          <h4 class="font-semibold mb-2 text-sm">Standard Seats</h4>
+          <p class="text-xs">Comfortable seating with great viewing angles</p>
+          <p class="text-green-400 mt-1 text-sm">{{ standardPrice | currency }}</p>
+        </div>
+        <div class="bg-gray-800 p-3 rounded-lg border-2 border-yellow-400">
+          <h4 class="font-semibold mb-2 text-sm">Premium Seats</h4>
+          <p class="text-xs">Larger seats with extra legroom and premium materials</p>
+          <p class="text-yellow-400 mt-1 text-sm">{{ premiumPrice | currency }}</p>
+        </div>
+        <div class="bg-gray-800 p-3 rounded-lg">
+          <h4 class="font-semibold mb-2 text-sm">Accessible Seats</h4>
+          <p class="text-xs">Spacious seating for wheelchair users and companions</p>
+          <p class="text-blue-400 mt-1 text-sm">{{ accessiblePrice | currency }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Booking Summary -->
+    <div class="md:w-80">
+      <app-order-summary 
+        [movieTitle]="'Jurassic World Rebirth'"
+        [selectedDateLabel]="selectedDateLabel"
+        [selectedTime]="selectedTime"
+        [selectedScreen]="selectedScreen"
+        [selectedSeats]="selectedSeats"
+        [selectedConcessions]="selectedConcessions"
+        [subtotal]="subtotal"
+        [promoApplied]="promoApplied"
+        [promoCode]="promoCode"
+        [promoDiscount]="promoDiscount"
+        [loyaltyPointsUsed]="loyaltyPointsUsed"
+        [totalPrice]="totalPrice"
+        (continueToPayment)="onContinueToPayment()">
+      </app-order-summary>
+      
+      <!-- Concession Stand -->
+      <div class="bg-gray-800 p-4 rounded-lg mt-4">
+        <h4 class="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+          <i class="fas fa-utensils"></i> Concession Stand
+        </h4>
+        
+        <div class="grid grid-cols-1 gap-3">
+          <div *ngFor="let item of concessionItems" class="flex justify-between items-center p-2 hover:bg-gray-700 rounded-lg">
+            <div>
+              <div class="font-medium text-sm">{{ item.name }}</div>
+              <div class="text-xs text-gray-400">{{ item.description }}</div>
+              <div class="text-green-400 text-xs mt-1">{{ item.price | currency }}</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button (click)="updateConcessionItem(item, -1)" class="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-600 text-xs">
+                -
+              </button>
+              <span class="text-sm">{{ getConcessionQuantity(item.id) }}</span>
+              <button (click)="updateConcessionItem(item, 1)" class="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-600 text-xs">
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

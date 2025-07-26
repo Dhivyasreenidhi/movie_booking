@@ -1,0 +1,40 @@
+/* Ensure the main container takes full screen */
+.relative {
+  height: 100vh !important;
+  width: 100vw !important;
+  overflow: auto; /* Allow scrolling if content overflows */
+}
+
+/* Adjust the inner content container to fit and scroll */
+.relative.z-30 {
+  height: 100%;
+  width: 100%;
+  overflow-y: auto; /* Vertical scroll for content */
+  padding-bottom: 20px; /* Ensure padding at bottom for visibility */
+}
+
+/* Ensure modals are centered and full-screen compatible */
+.fixed.inset-0 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.max-w-2xl {
+  max-width: 90vw; /* Allow wider content on full screen */
+  width: 100%;
+}
+
+/* Adjust grid layouts for full screen */
+.grid-cols-2, .grid-cols-3, .grid-cols-4 {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid */
+}
+
+@media (max-width: 640px) {
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+  .max-w-2xl {
+    max-width: 100vw;
+  }
+}

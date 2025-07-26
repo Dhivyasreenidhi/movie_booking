@@ -1,0 +1,62 @@
+<div class="w-full p-4 md:px-8 lg:px-12 xl:px-20">
+    <h2 class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]  ">TRAILERS</h2>
+
+    <!-- Main Video Player -->
+    <div class="video-container mb-4">
+        <video id="main-video" controls autoplay class="w-full h-64 rounded-lg shadow-lg object-cover">
+
+            <source id="video-source" src="videos/videoplayback.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Movie Thumbnails List -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <!-- Example Movie -->
+        <div class="text-center hover:scale-105 transition-transform">
+            <img src="http://img.youtube.com/vi/BoxOVQ5oP9Y/0.jpg" class="w-full h-36 object-cover rounded-lg border-2 border-red-700">
+            <h3 class="text-md font-bold mt-1">3-BHK</h3>
+            <button onclick="playMovie('videos/videoplayback.mp4')" class="bg-gradient-to-r from-red-700 to-red-900 text-white px-3 py-1 rounded-lg mt-1 hover:scale-110 hover:shadow-lg">
+                WATCH NOW
+            </button>
+        </div>
+
+        <div class="text-center hover:scale-105 transition-transform">
+            <img src="http://img.youtube.com/vi/aZgGWvOvvsM/0.jpg" class="w-full h-36 object-cover rounded-lg border-2 border-red-700">
+            <h3 class="text-md font-bold mt-1">Paranthu poo</h3>
+            <button onclick="playMovie('videos/movie2.mp4')" class="bg-gradient-to-r from-red-700 to-red-900 text-white px-3 py-1 rounded-lg mt-1 hover:scale-110 hover:shadow-lg">
+                WATCH NOW
+            </button>
+        </div>
+
+        <div class="text-center hover:scale-105 transition-transform">
+            <img src="http://img.youtube.com/vi/S27THSM8yd4/0.jpg" class="w-full h-36 object-cover rounded-lg border-2 border-red-700">
+            <h3 class="text-md font-bold mt-1">Maargan</h3>
+            <button onclick="playMovie('videos/movie2.mp4')" class="bg-gradient-to-r from-red-700 to-red-900 text-white px-3 py-1 rounded-lg mt-1 hover:scale-110 hover:shadow-lg">
+                WATCH NOW
+            </button>
+        </div>
+
+        <div class="text-center hover:scale-105 transition-transform">
+            <img src="http://img.youtube.com/vi/Wm2R3aJPY2M/0.jpg" class="w-full h-36 object-cover rounded-lg border-2 border-red-700">
+            <h3 class="text-md font-bold mt-1">Oho Enthan Baby</h3>
+            <button onclick="playMovie('videos/movie2.mp4')" class="bg-gradient-to-r from-red-700 to-red-900 text-white px-3 py-1 rounded-lg mt-1 hover:scale-110 hover:shadow-lg">
+                WATCH NOW
+            </button>
+        </div>
+
+        <div class="text-center hover:scale-105 transition-transform">
+            <img src="http://img.youtube.com/vi/edb1pY9BoVg/0.jpg" class="w-full h-36 object-cover rounded-lg border-2 border-red-700">
+            <h3 class="text-md font-bold mt-1">DNA</h3>
+            <button onclick="playMovie('videos/movie2.mp4')" class="bg-gradient-to-r from-red-700 to-red-900 text-white px-3 py-1 rounded-lg mt-1 hover:scale-110 hover:shadow-lg">
+                WATCH NOW
+            </button>
+        </div>
+
+        
+
+        <!-- Add more movies below in similar format -->
+    </div>
+</div>
+
+

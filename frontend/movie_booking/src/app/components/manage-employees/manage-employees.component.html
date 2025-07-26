@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineAdmin - Movie Theater Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-light: #ef4444;
+      --primary-dark: #b91c1c;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #111827;
+      --light: #f9fafb;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color:  #030712;
+      color: #f3f4f6;
+      min-height: 140vh;
+    }
+    
+    .sidebar-item {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar-item:hover {
+      transform: translateX(4px);
+      background-color: rgba(220, 38, 38, 0.1);
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-badge {
+      transition: all 0.2s ease;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .chart-container {
+      transition: all 0.3s ease;
+    }
+    
+    .tab-active {
+      position: relative;
+      color: var(--primary);
+    }
+    
+    .tab-active:after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: var(--primary);
+      border-radius: 3px;
+    }
+    
+    .user-avatar {
+      transition: transform 0.3s ease;
+    }
+    
+    .user-avatar:hover {
+      transform: scale(1.1);
+    }
+    
+    .table-row {
+      transition: background-color 0.2s ease;
+    }
+    
+    .table-row:hover {
+      background-color: rgba(31, 41, 55, 0.8);
+    }
+    
+    .dropdown-menu {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* Layout styles */
+    .main-container {
+      display: grid;
+      grid-template-areas: 
+        "navbar navbar"
+        "sidebar content";
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    app-nav-bar {
+      grid-area: navbar;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    app-sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 0;
+  align-self: start; /* Ensures it aligns at the top of the grid area */
+}
+
+    .content-area {
+      grid-area: content;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Header -->
+    <app-nav-bar></app-nav-bar>
+    
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+
+    <!-- Main Content -->
+    <div class="main-container">
+    
+
+    <div class="content-area">
+      <!-- Notifications -->
+      <div class="fixed top-4 right-4 space-y-2 z-50">
+        <div *ngFor="let notification of notifications" 
+             class="notification px-4 py-2 rounded-lg shadow-lg {{ notification.type === 'success' ? 'bg-green-500' : 'bg-red-500' }} text-white">
+          {{ notification.message }}
+          
+        </div>
+      </div>
+
+      <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-red-500">User Management</h1>
+
+        <!-- Search -->
+        <div class="mb-6 bg-gray-800 p-6 rounded-lg shadow-lg animate-slideIn">
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Search</label>
+              <div class="relative">
+                <input
+                  type="text"
+                  (ngModelChange)="onSearchChange($event)"
+                  [(ngModel)]="searchTerm"
+                  placeholder="Search by email or phone"
+                  class="w-full bg-gray-700 border border-gray-600 rounded-md py-2 pl-10 pr-3 focus:outline-none focus:ring-2 focus:ring-primary text-white transition duration-200"
+                >
+                <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Table -->
+        <div class="overflow-x-auto bg-gray-800 rounded-lg shadow-lg animate-slideIn">
+          <table class="min-w-full divide-y divide-gray-700">
+            <thead class="bg-gray-900">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email or Phone</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Created At</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-gray-800 divide-y divide-gray-700">
+              <tr *ngFor="let user of filteredUsers">
+                <td class="px-6 py-4 whitespace-nowrap">{{ user.id }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ user.email_or_phone }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ user.created_at | date:'short' }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <button (click)="selectUser(user)" class="text-primary hover:text-primary-dark mr-2" ><i class="fas fa-cog"></i></button>
+                  <button (click)="confirmDelete(user)" class="text-red-400 hover:text-red-500" ><i class="fas fa-trash"></i></button>
+                </td>
+              </tr>
+              <tr *ngIf="filteredUsers.length === 0">
+                <td colspan="4" class="text-center text-gray-400 py-8">No users found</td>
+              </tr>
+        <!-- Pagination Controls (Bottom Right Corner) -->
+        <div style="position: absolute; bottom: 0; right: 0; z-index: 10;" class="flex justify-end items-center space-x-2 text-right w-full pb-4 pr-4">
+          <button 
+            (click)="goToPage(currentPage - 1)" 
+            [disabled]="currentPage === 1" 
+            class="px-5 py-1 rounded bg-gray-700 text-white disabled:opacity-50 transition-colors duration-200 hover:bg-red-500">
+            Prev
+          </button>
+          <span class="px-2">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button 
+            (click)="goToPage(currentPage + 1)" 
+            [disabled]="currentPage === totalPages" 
+            class="px-5 py-1 rounded bg-gray-700 text-white disabled:opacity-50 transition-colors duration-200 hover:bg-red-500">
+            Next
+          </button>
+        </div>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- User Management Panel as Modal Popup -->
+        <div *ngIf="selectedUser" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate-fadeIn">
+          <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-8 relative">
+            <button (click)="selectedUser = null" title="Close" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-2xl">
+              <i class="fas fa-times"></i>
+            </button>
+            <h2 class="text-xl font-semibold mb-4">Manage User: {{ selectedUser.email_or_phone }}</h2>
+            <div class="space-y-2">
+              <p><span class="font-medium">ID:</span> {{ selectedUser.id }}</p>
+              <p><span class="font-medium">Email or Phone:</span> {{ selectedUser.email_or_phone }}</p>
+              <p><span class="font-medium">Created At:</span> {{ selectedUser.created_at | date:'short' }}</p>
+            </div>
+            <div class="space-y-3 mt-4">
+              <button 
+                (click)="confirmDelete(selectedUser)"
+                class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded transition duration-200">
+                <i class="fas fa-trash mr-2"></i> Remove Account
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div *ngIf="showDeleteConfirmation" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 animate-slideIn">
+          <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div class="p-6">
+              <h2 class="text-2xl font-semibold mb-4">Confirm Removal</h2>
+
+              <p class="mb-6">Are you sure you want to remove user "{{ userToDelete?.email_or_phone }}"? This action cannot be undone.</p>
+              <div class="flex justify-end space-x-3">
+                <button 
+                  (click)="cancelDelete()"
+                  class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition duration-200">
+                  Cancel
+                </button>
+                <button 
+                  (click)="deleteUser()"
+                  class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-200">
+                  Remove User
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+     </div>
+    
+</body>
+</html>

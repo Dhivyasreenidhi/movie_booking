@@ -1,0 +1,78 @@
+<div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 animate__animated animate__fadeIn">
+  <div class="bg-gray-800 p-6 rounded-lg text-white w-full max-w-2xl">
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-2xl font-semibold">Booking Confirmation</h2>
+      <button (click)="closeModal()" class="text-gray-400 hover:text-white">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="md:col-span-2">
+        <div class="bg-gray-700 p-4 rounded-lg mb-4">
+          <div class="flex justify-between mb-2 text-sm">
+            <span class="text-gray-400">Confirmation #:</span>
+            <span class="font-mono">{{ confirmationNumber }}</span>
+          </div>
+          <div class="flex justify-between mb-2 text-sm">
+            <span class="text-gray-400">Movie:</span>
+            <span>{{ movieTitle }}</span>
+          </div>
+          <div class="flex justify-between mb-2 text-sm">
+            <span class="text-gray-400">Date & Time:</span>
+            <span>{{ selectedDate }} at {{ selectedTime }}</span>
+          </div>
+          <div class="flex justify-between mb-2 text-sm">
+            <span class="text-gray-400">Screen:</span>
+            <span>{{ screenName }}</span>
+          </div>
+          <div class="flex justify-between mb-2 text-sm">
+            <span class="text-gray-400">Seats:</span>
+            <span>{{ selectedSeats }}</span>
+          </div>
+        </div>
+        
+        <div *ngIf="concessions.length > 0" class="bg-gray-700 p-4 rounded-lg mb-4">
+          <h4 class="font-semibold mb-3 text-sm">Food & Drinks</h4>
+          <div *ngFor="let item of concessions" class="flex justify-between text-xs mb-2">
+            <span>{{ item.quantity }}x {{ item.name }}</span>
+            <span>{{ item.price * item.quantity | currency }}</span>
+          </div>
+        </div>
+        
+        <div class="bg-gray-700 p-4 rounded-lg">
+          <div class="flex justify-between font-bold text-base">
+            <span>Total Paid:</span>
+            <span>{{ totalPrice | currency }}</span>
+          </div>
+          <div class="text-xs text-gray-400 mt-2">
+            Payment method: {{ paymentMethod }}
+          </div>
+        </div>
+      </div>
+      
+      <div>
+        <div class="mb-4">
+          <img src="assets/qr-code.png" alt="Booking QR Code" class="w-full max-w-xs mx-auto">
+          <p class="text-center mt-2 text-sm">Scan at theater for entry</p>
+        </div>
+        
+        <div class="bg-blue-900/20 border border-blue-500 rounded-lg p-3 mb-4">
+          <h4 class="font-semibold mb-2 text-sm">Theater Information</h4>
+          <p class="text-xs">KG Cinemas Downtown</p>
+          <p class="text-xs">123 Cinema Street, Your City</p>
+          <p class="text-xs mt-2">Arrive at least 30 minutes before showtime</p>
+        </div>
+        
+        <button (click)="sendConfirmationEmail()" 
+                class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg mb-2 flex items-center justify-center gap-2 text-sm">
+          <i class="far fa-envelope"></i> Email Confirmation
+        </button>
+        <button (click)="downloadTickets()" 
+                class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg flex items-center justify-center gap-2 text-sm">
+          <i class="fas fa-download"></i> Download Tickets
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

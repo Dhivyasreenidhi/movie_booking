@@ -1,0 +1,19 @@
+<div class="mb-8 p-6 bg-gray-800 rounded-lg" [ngClass]="{'bg-gray-200': isLightTheme}">
+  <h2 class="text-2xl font-semibold mb-4 flex items-center gap-2">
+    <i class="fas fa-scroll"></i> Synopsis
+  </h2>
+  <p class="mb-4">
+    {{ shortSynopsis }}
+  </p>
+  <button (click)="toggleFullSynopsis()" class="text-blue-400 hover:text-blue-300">
+    {{ showFullSynopsis ? 'Show Less' : 'Read More' }}
+  </button>
+  <div *ngIf="showFullSynopsis" class="mt-4 animate__animated animate__fadeIn">
+    <p class="mb-2">
+      {{ fullSynopsisPart1 }}
+    </p>
+    <p>
+      {{ fullSynopsisPart2 }}
+    </p>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+<div class="mb-8">
+  <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+    <div class="flex items-center mb-4 md:mb-0" [class.text-blue-400]="currentStep === 1">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center mr-2" 
+           [ngClass]="{'bg-blue-500 text-white': currentStep === 1, 'bg-gray-700': currentStep !== 1}">1</div>
+      <span class="text-sm md:text-base">Select Date & Time</span>
+    </div>
+    <div class="hidden md:block flex-1 h-px bg-gray-600 mx-4"></div>
+    <div class="flex items-center mb-4 md:mb-0" [class.text-blue-400]="currentStep === 2">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center mr-2" 
+           [ngClass]="{'bg-blue-500 text-white': currentStep === 2, 'bg-gray-700': currentStep !== 2}">2</div>
+      <span class="text-sm md:text-base">Choose Seats</span>
+    </div>
+    <div class="hidden md:block flex-1 h-px bg-gray-600 mx-4"></div>
+    <div class="flex items-center" [class.text-blue-400]="currentStep === 3">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center mr-2" 
+           [ngClass]="{'bg-blue-500 text-white': currentStep === 3, 'bg-gray-700': currentStep !== 3}">3</div>
+      <span class="text-sm md:text-base">Confirm & Pay</span>
+    </div>
+  </div>
+</div>

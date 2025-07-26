@@ -1,0 +1,12 @@
+/* You can add custom styles here if needed */
+.bg-yellow-500 {
+  background-color: #eab308;
+}
+
+.bg-yellow-600 {
+  background-color: #ca8a04;
+}
+
+.bg-yellow-500:hover {
+  background-color: #ca8a04;
+}

@@ -1,0 +1,206 @@
+<div *ngIf="currentStep === 3" class="mb-8 animate__animated animate__fadeIn">
+  <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
+    <i class="far fa-credit-card"></i> Payment Information
+  </h3>
+
+  <div class="flex flex-col md:flex-row gap-6">
+    <!-- Payment Form -->
+    <div class="flex-1">
+      <form #bookingForm="ngForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <!-- Personal Information -->
+        <div class="bg-gray-800 p-4 rounded-lg">
+          <h4 class="font-semibold mb-4">Personal Information</h4>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label for="firstName" class="block mb-1 text-sm">First Name*</label>
+              <input id="firstName" name="firstName" [(ngModel)]="bookingData.firstName" required
+                     class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+            <div>
+              <label for="lastName" class="block mb-1 text-sm">Last Name*</label>
+              <input id="lastName" name="lastName" [(ngModel)]="bookingData.lastName" required
+                     class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="email" class="block mb-1 text-sm">Email Address*</label>
+            <input id="email" name="email" type="email" [(ngModel)]="bookingData.email" required
+                   class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm">
+          </div>
+
+          <div class="mb-4">
+            <label for="phone" class="block mb-1 text-sm">Phone Number*</label>
+            <input id="phone" name="phone" [(ngModel)]="bookingData.phone" required
+                   class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm">
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="bg-gray-800 p-4 rounded-lg">
+          <h4 class="font-semibold mb-4">Payment Method</h4>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <button *ngFor="let method of paymentMethods"
+                    type="button"
+                    [class.border-blue-500]="bookingData.paymentMethod === method.value"
+                    [class.bg-gray-700]="bookingData.paymentMethod !== method.value"
+                    class="p-3 rounded-lg border border-gray-600 flex flex-col items-center justify-center hover:bg-gray-700"
+                    (click)="bookingData.paymentMethod = method.value">
+              <i [class]="method.icon + ' text-xl mb-1'"></i>
+              <span class="text-xs">{{ method.label }}</span>
+            </button>
+          </div>
+
+          <!-- Credit Card Form -->
+          <div *ngIf="showCreditCardForm()">
+            <div class="mb-4">
+              <label for="cardNumber" class="block mb-1 text-sm">Card Number*</label>
+              <input id="cardNumber" name="cardNumber" [(ngModel)]="paymentDetails.cardNumber" required
+                     class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm"
+                     placeholder="1234 5678 9012 3456">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="expiryDate" class="block mb-1 text-sm">Expiry Date*</label>
+                <input id="expiryDate" name="expiryDate" [(ngModel)]="paymentDetails.expiryDate" required
+                       class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm"
+                       placeholder="MM/YY">
+              </div>
+              <div>
+                <label for="cvv" class="block mb-1 text-sm">CVV*</label>
+                <input id="cvv" name="cvv" [(ngModel)]="paymentDetails.cvv" required
+                       class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm"
+                       placeholder="123">
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label for="cardName" class="block mb-1 text-sm">Name on Card*</label>
+              <input id="cardName" name="cardName" [(ngModel)]="paymentDetails.cardName" required
+                     class="w-full p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm">
+            </div>
+          </div>
+
+          <!-- PayPal/Digital Wallet Notice -->
+          <div *ngIf="showPaymentRedirectNotice()"
+               class="bg-blue-900/20 border border-blue-500 rounded-lg p-3 text-sm mb-4">
+            <p class="text-xs">You will be redirected to {{ getPaymentMethodName(bookingData.paymentMethod) }} to complete the payment after confirmation.</p>
+          </div>
+        </div>
+
+        <!-- Promo Code & Loyalty Points -->
+        <div class="bg-gray-800 p-4 rounded-lg">
+          <h4 class="font-semibold mb-4">Discounts & Rewards</h4>
+
+          <div class="mb-4">
+            <label for="promoCode" class="block mb-1 text-sm">Promo Code</label>
+            <div class="flex gap-2">
+              <input id="promoCode" name="promoCode" [(ngModel)]="bookingData.promoCode"
+                     class="flex-1 p-2 bg-gray-700 rounded border border-gray-600 focus:ring-2 focus:ring-blue-500 text-sm"
+                     placeholder="Enter promo code">
+              <button type="button" (click)="applyPromoCode()" class="bg-blue-600 hover:bg-blue-700 px-4 rounded text-sm">
+                Apply
+              </button>
+            </div>
+            <div *ngIf="promoError" class="text-red-500 text-xs mt-1">{{ promoError }}</div>
+            <div *ngIf="promoApplied" class="text-green-500 text-xs mt-1">Promo code applied successfully!</div>
+          </div>
+
+          <div *ngIf="loyaltyPoints > 0">
+            <label class="flex items-center gap-2 text-sm">
+              <input type="checkbox" [(ngModel)]="useLoyaltyPoints" name="useLoyaltyPoints" (change)="updateLoyaltyPointsUsage()">
+              Use Loyalty Points (Available: {{ loyaltyPoints }} pts = {{ loyaltyPoints / 100 | currency }})
+            </label>
+            <div *ngIf="useLoyaltyPoints" class="mt-2">
+              <label class="block mb-1 text-sm">Points to use (max {{ min(loyaltyPoints, totalPrice * 100) }}):</label>
+              <input type="range" min="0" [max]="min(loyaltyPoints, totalPrice * 100)"
+                     [(ngModel)]="loyaltyPointsUsed" name="loyaltyPointsUsed"
+                     (input)="updateLoyaltyPointsUsage()" class="w-full">
+              <div class="flex justify-between text-xs">
+                <span>0</span>
+                <span>{{ min(loyaltyPoints, totalPrice * 100) }} pts</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms and Conditions -->
+        <div class="bg-gray-800 p-4 rounded-lg">
+          <h4 class="font-semibold mb-4">Terms & Conditions</h4>
+
+          <div class="mb-4 max-h-40 overflow-y-auto p-3 bg-gray-900 rounded text-xs">
+            <p class="mb-2">By completing this booking, you agree to the following terms:</p>
+            <ul class="list-disc pl-5 space-y-1">
+              <li *ngFor="let term of terms">{{ term }}</li>
+            </ul>
+          </div>
+
+          <label class="flex items-start gap-2 text-sm">
+            <input type="checkbox" [(ngModel)]="bookingData.termsAccepted" name="termsAccepted" required class="mt-1">
+            <span>I agree to the terms and conditions and privacy policy*</span>
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit"
+                [disabled]="!bookingForm.valid || selectedSeats.length === 0 || isProcessingPayment"
+                class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg mt-4 font-semibold transition flex items-center justify-center gap-2 text-sm"
+                [class.opacity-50]="!bookingForm.valid || selectedSeats.length === 0 || isProcessingPayment">
+          <i class="fas fa-lock"></i>
+          <span *ngIf="!isProcessingPayment">Complete Payment of {{ totalPrice | currency }}</span>
+          <span *ngIf="isProcessingPayment">Processing Payment...</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="md:w-80">
+      <app-order-summary
+        [movieTitle]="'Jurassic World Rebirth'"
+        [selectedDateLabel]="selectedDateLabel"
+        [selectedTime]="selectedTime"
+        [selectedScreen]=1
+        [selectedSeats]="selectedSeats"
+        [selectedConcessions]="selectedConcessions"
+        [subtotal]="subtotal"
+        [promoApplied]="promoApplied"
+        [promoCode]="promoCode"
+        [promoDiscount]="promoDiscount"
+        [loyaltyPointsUsed]="loyaltyPointsUsed"
+        [totalPrice]="totalPrice">
+      </app-order-summary>
+
+      
+      <div class="border-t pt-3 mt-4">
+        <div class="flex items-center gap-2 text-sm text-gray-400 mb-2">
+          <i class="fas fa-lock"></i>
+          <span>Secure Payment</span>
+        </div>
+        <div class="flex gap-2">
+          <img *ngFor="let payment of paymentLogos" [src]="payment.src" [alt]="payment.alt" class="h-6">
+        </div>
+      </div>
+
+      <!-- Need Help? -->
+      <div class="bg-gray-800 p-4 rounded-lg mt-4">
+        <h4 class="text-lg font-semibold mb-2">Need Help?</h4>
+        <p class="text-sm mb-3">Contact our customer support for any questions about your booking.</p>
+        <button (click)="toggleChat()" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-sm">
+          <i class="fas fa-comment-dots mr-2"></i> Live Chat Support
+        </button>
+        <div class="flex items-center mt-3 text-sm">
+          <i class="fas fa-phone-alt mr-2"></i>
+          <span>+1 (800) 555-CINE</span>
+        </div>
+        <div class="flex items-center mt-1 text-sm">
+          <i class="fas fa-envelope mr-2"></i>
+          <span>supportakgcinemas.com</span>
+        </div>
+      </div>
+      </div>
+      </div>
+    
+ 

@@ -1,0 +1,67 @@
+<div class="bg-gray-800 p-4 rounded-lg sticky top-4">
+  <h4 class="text-lg font-semibold mb-4 border-b pb-2">Booking Summary</h4>
+  
+  <div class="mb-4">
+    <div class="flex justify-between mb-1 text-sm">
+      <span class="text-gray-400">Movie:</span>
+      <span class="font-medium">{{ movieTitle }}</span>
+    </div>
+    <div class="flex justify-between mb-1 text-sm">
+      <span class="text-gray-400">Date:</span>
+      <span>{{ selectedDateLabel }}</span>
+    </div>
+    <div class="flex justify-between mb-1 text-sm">
+      <span class="text-gray-400">Time:</span>
+      <span>{{ selectedTime }}</span>
+    </div>
+    <div class="flex justify-between mb-1 text-sm">
+      <span class="text-gray-400">Screen:</span>
+      <span>{{ getScreenName(selectedScreen) }}</span>
+    </div>
+  </div>
+  
+  <div class="border-t pt-3 mb-4">
+    <h5 class="font-semibold mb-2 text-sm">Selected Seats ({{ selectedSeats.length }})</h5>
+    <div *ngIf="selectedSeats.length === 0" class="text-gray-400 text-xs">No seats selected yet</div>
+    <div *ngFor="let seat of selectedSeats" class="flex justify-between text-xs mb-1">
+      <span>Seat {{ seat.id }} <span *ngIf="seat.type === 'premium'" class="text-yellow-400">(Premium)</span></span>
+      <span>{{ seat.price | currency }}</span>
+    </div>
+  </div>
+  
+  <div class="border-t pt-3 mb-4" *ngIf="selectedConcessions.length > 0">
+    <h5 class="font-semibold mb-2 text-sm">Food & Drinks</h5>
+    <div *ngFor="let item of selectedConcessions" class="flex justify-between text-xs mb-1">
+      <span>{{ item.quantity }}x {{ item.name }}</span>
+      <span>{{ item.price * item.quantity | currency }}</span>
+    </div>
+  </div>
+  
+  <div class="border-t pt-3">
+    <div class="flex justify-between mb-1 text-sm">
+      <span>Subtotal:</span>
+      <span>{{ subtotal | currency }}</span>
+    </div>
+    <div *ngIf="promoApplied" class="flex justify-between mb-1 text-green-400 text-sm">
+      <span>Discount ({{ promoCode }}):</span>
+      <span>-{{ promoDiscount | currency }}</span>
+    </div>
+    <div *ngIf="loyaltyPointsUsed > 0" class="flex justify-between mb-1 text-blue-400 text-sm">
+      <span>Loyalty Points:</span>
+      <span>-{{ loyaltyPointsUsed | currency }}</span>
+    </div>
+    <div class="flex justify-between font-bold text-base mt-2">
+      <span>Total:</span>
+      <span>{{ totalPrice | currency }}</span>
+    </div>
+  </div>
+  
+  <button *ngIf="showContinueButton" 
+          (click)="continueToPayment.emit()" 
+          [disabled]="selectedSeats.length === 0"
+          class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg mt-4 font-semibold transition text-sm"
+          [class.opacity-50]="selectedSeats.length === 0"
+          [class.cursor-not-allowed]="selectedSeats.length === 0">
+    Continue to Payment
+  </button>
+</div>
