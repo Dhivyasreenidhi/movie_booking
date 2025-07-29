@@ -5,64 +5,98 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HeadersComponent } from '../headers/headers.component';
 import { FootersComponent } from '../footers/footers.component';
 import { TheaterBookingComponent } from '../../theater-booking/theater-booking.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-movie',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeadersComponent, FootersComponent, TheaterBookingComponent],
+  imports: [CommonModule, FormsModule, HeadersComponent, FootersComponent, TheaterBookingComponent, HttpClientModule],
   templateUrl: './movie.component.html',
   styleUrls: ['./movie.component.css']
 })
 export class MovieComponent implements OnInit, OnDestroy {
 
   // Movie Data
-  movie = {
-    title: "3BHK",
-    subtitle: "U • 2 hrs 20 mins • Drama, Family • Tamil, Telugu",
-    rating: "U",
-    duration: "2 hrs 20 mins",
-    genres: "Drama, Family",
-    languages: "Tamil, Telugu",
-    posterUrl: "assets/movie-posters/3bhk.jpg",
-    backdropUrl: "assets/movie-backdrops/3bhk-bg.jpg",
-    trailerUrl: "https://www.youtube.com/embed/example",
-    synopsis: "Three different families from diverse backgrounds end up living together in a 3BHK apartment, leading to conflicts, emotional drama, and ultimately, understanding.",
-    starRating: 4.2,
-    audienceScore: 92
-  };
+  movie: any = {};
+  constructor(
+    private sanitizer: DomSanitizer,
+    private route: ActivatedRoute,
+    private http: HttpClient,
+    private router: Router
+  ) {}
 
   // KG Cinemas screens and showtimes (populated from manage-showtimes)
-  kgScreens: { name: string; type: string; showtimes: string[] }[] = [];
-
-  // ...existing code...
+  kgScreens: { name: string; showtimes: any[] }[] = [];
+  showtimes: any[] = [];
 
   ngOnInit(): void {
-    this.loadKGScreensFromShowtimes();
-    // Calendar/date selection removed
+    this.route.paramMap.subscribe(params => {
+      const movieId = params.get('id');
+      if (movieId) {
+        this.fetchMovieDetails(movieId);
+        this.fetchShowtimes(movieId);
+      }
+    });
   }
 
-  loadKGScreensFromShowtimes(): void {
-    // Simulate import from manage-showtimes (replace with actual service/API if available)
-    // Example: Assume window['filteredShowtimes'] is available globally or via service
-    const showtimes: any[] = (window as any).filteredShowtimes || [];
-    const screensMap: { [key: string]: { name: string; type: string; showtimes: string[] } } = {};
-    showtimes.forEach(st => {
-      if (!screensMap[st.screen]) {
-        screensMap[st.screen] = {
-          name: st.screen,
-          type: st.screenType || '',
-          showtimes: []
+
+  fetchMovieDetails(movieId: string): void {
+    this.http.get<any>(`/api/movies/${movieId}`).subscribe({
+      next: (data) => {
+        // Fill missing fields with empty string
+        this.movie = {
+          id: data.id || '',
+          title: data.title || '',
+          description: data.description || '',
+          genre: data.genre || '',
+          releaseDate: data.releaseDate || '',
+          duration: data.duration || '',
+          director: data.director || '',
+          cast: data.cast || '',
+          language: data.language || '',
+          posterUrl: data.posterUrl || '',
+          trailerUrl: data.trailerUrl || '',
+          userRating: data.userRating || '',
+          votes: data.votes || '',
+          createdAt: data.createdAt || '',
+          updatedAt: data.updatedAt || ''
+        };
+      },
+      error: () => {
+        this.movie = {
+          id: '', title: '', description: '', genre: '', releaseDate: '', duration: '', director: '', cast: '', language: '', posterUrl: '', trailerUrl: '', userRating: '', votes: '', createdAt: '', updatedAt: ''
         };
       }
-      screensMap[st.screen].showtimes.push(st.showTime);
     });
-    this.kgScreens = Object.values(screensMap);
+  }
+  fetchShowtimes(movieId: string): void {
+    this.http.get<any[]>(`/api/showtimes/movie/${movieId}`).subscribe({
+      next: (showtimes) => {
+        this.showtimes = showtimes;
+        // Group by screen, each showtime is the full object
+        const screensMap: { [key: string]: { name: string; showtimes: any[] } } = {};
+        showtimes.forEach(st => {
+          if (!screensMap[st.screen]) {
+            screensMap[st.screen] = {
+              name: st.screen,
+              showtimes: []
+            };
+          }
+          screensMap[st.screen].showtimes.push(st);
+        });
+        this.kgScreens = Object.values(screensMap);
+      },
+      error: () => {
+        this.kgScreens = [];
+        this.showtimes = [];
+      }
+    });
   }
 
   // Calendar/date selection removed
   showFullSynopsis = false;
   showSeatSelection = false;
-  showPayment = false;
   showConfirmation = false;
   showAlert = false;
   alertTitle: string = '';
@@ -72,44 +106,16 @@ export class MovieComponent implements OnInit, OnDestroy {
   ticketPrice = 250;
   isLightTheme = false;
 
-  seats = Array.from({ length: 100 }, (_, i) => ({
-    number: i + 1,
-    selected: false,
-    occupied: Math.random() > 0.8
-  }));
+
+  seats: any[] = [];
+  selectedShowtimeId: number | null = null;
 
   selectedSeats: number[] = [];
 
-  paymentMethod: string = 'upi';
-  upiId: string = '';
-  cardNumber: string = '';
-  cardExpiry: string = '';
-  cardCvv: string = '';
-  bank: string = '';
-  isProcessing = false;
+  // Payment logic removed
   bookingId: string = '';
-  timerMinutes: number = 5;
-  timerSeconds: number = 0;
-  private timerInterval: any;
 
-  offers = [
-    {
-      id: 1,
-      title: "First Time User",
-      description: "Get 10% off on your first booking",
-      discount: 0,
-      applied: false
-    },
-    {
-      id: 2,
-      title: "Weekend Special",
-      description: "Flat ₹50 off on weekend bookings",
-      discount: 0,
-      applied: false
-    }
-  ];
-  appliedOffer: any = null;
-  finalTotal: number = 0;
+  // Offers/payment logic removed
 
   reviews = [
     {
@@ -133,15 +139,13 @@ export class MovieComponent implements OnInit, OnDestroy {
   ];
 
   safeTrailerUrl: SafeResourceUrl | null = null;
-  cardSelected: boolean = false;
+  // Payment logic removed
 
-  constructor(private sanitizer: DomSanitizer) {}
+  // (removed duplicate constructor)
 
 
   ngOnDestroy(): void {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
+    // No payment timer to clear
   }
 
   toggleTheme(): void {
@@ -156,12 +160,44 @@ export class MovieComponent implements OnInit, OnDestroy {
     this.showFullSynopsis = !this.showFullSynopsis;
   }
 
+
   openSeatSelection(theaterName: string, time: string): void {
     this.selectedTheater = theaterName;
     this.selectedTime = time;
+    // Find the showtime object for this screen and time
+    let showtimeObj = null;
+    for (const screen of this.kgScreens) {
+      if (screen.name === theaterName) {
+        showtimeObj = screen.showtimes.find(st => st.show_time === time);
+        break;
+      }
+    }
+    if (showtimeObj) {
+      this.selectedShowtimeId = showtimeObj.id;
+      this.fetchSeatsForShowtime(showtimeObj.id);
+    } else {
+      this.selectedShowtimeId = null;
+      this.seats = [];
+    }
     this.showSeatSelection = true;
     this.selectedSeats = [];
-    this.seats.forEach(seat => seat.selected = false);
+  }
+
+  fetchSeatsForShowtime(showtimeId: number): void {
+    this.http.get<any[]>(`/api/seats/${showtimeId}`).subscribe({
+      next: (seats) => {
+        // Each seat: { id, showtime_id, seat_number, status }
+        this.seats = seats.map(seat => ({
+          ...seat,
+          selected: false,
+          occupied: seat.status === 'booked',
+          number: seat.seat_number
+        }));
+      },
+      error: () => {
+        this.seats = [];
+      }
+    });
   }
 
   toggleSeat(seat: any): void {
@@ -173,99 +209,54 @@ export class MovieComponent implements OnInit, OnDestroy {
     }
   }
 
-  calculateTotal(): void {
-    const baseTotal = this.selectedSeats.length * this.ticketPrice;
-    let discount = 0;
-    if (this.appliedOffer) {
-      discount = this.appliedOffer.discount;
-    }
-    this.finalTotal = baseTotal - discount;
+  calculateTotal(): number {
+    return this.selectedSeats.length * this.ticketPrice;
   }
 
-  applyOffer(offer: any): void {
-    this.offers.forEach(o => o.applied = false);
-    offer.applied = true;
-    this.appliedOffer = {...offer};
-    if (offer.id === 1) {
-      this.appliedOffer.discount = Math.floor(this.selectedSeats.length * this.ticketPrice * 0.1);
-    } else if (offer.id === 2) {
-      this.appliedOffer.discount = 50;
-    }
-    this.calculateTotal();
-  }
+  // Offers/payment logic removed
 
-  proceedToPayment(): void {
+  confirmBooking(): void {
     if (this.selectedSeats.length === 0) {
       this.showAlertModal('No Seats Selected', 'Please select at least one seat.');
       return;
     }
-    this.showSeatSelection = false;
-    this.showPayment = true;
-    this.calculateTotal();
-    this.startTimer();
-  }
-
-  selectPaymentMethod(method: string): void {
-    this.paymentMethod = method;
-    this.upiId = '';
-    this.cardSelected = false;
-    this.cardNumber = '';
-    this.cardExpiry = '';
-    this.cardCvv = '';
-    this.bank = '';
-  }
-
-  processPayment(): void {
-    if (!this.validatePayment()) {
-      this.showAlertModal('Invalid Payment Details', 'Please enter valid payment details.');
+    if (!this.selectedShowtimeId) {
+      this.showAlertModal('Error', 'No showtime selected.');
       return;
     }
-    this.isProcessing = true;
-    setTimeout(() => {
-      this.isProcessing = false;
-      this.showPayment = false;
-      this.showConfirmation = true;
-      this.bookingId = this.generateBookingId();
-      this.stopTimer();
-    }, 3000);
+    // Book seats in backend
+    this.http.post('/api/seats/book', {
+      showtimeId: this.selectedShowtimeId,
+      seatNumbers: this.selectedSeats
+    }).subscribe({
+      next: () => {
+        this.showSeatSelection = false;
+        this.showConfirmation = true;
+        this.bookingId = this.generateBookingId();
+        // Refresh seats for this showtime
+        this.fetchSeatsForShowtime(this.selectedShowtimeId!);
+        // Navigate to paymentt component after booking
+        this.router.navigate(['/paymentt'], {
+          queryParams: {
+            movieId: this.movie.id,
+            showtimeId: this.selectedShowtimeId,
+            seats: this.selectedSeats.join(','),
+            total: this.selectedSeats.length * this.ticketPrice
+          }
+        });
+      },
+      error: () => {
+        this.showAlertModal('Booking Failed', 'Could not book seats. Please try again.');
+      }
+    });
   }
 
-  private validatePayment(): boolean {
-    if (this.paymentMethod === 'upi') {
-      return this.upiId.includes('@');
-    } else if (this.paymentMethod === 'card') {
-      return this.cardNumber.length >= 16 && this.cardExpiry.length === 5 && this.cardCvv.length === 3;
-    } else if (this.paymentMethod === 'netbanking') {
-      return !!this.bank;
-    }
-    return false;
-  }
+  // Payment logic removed
+
+  // Payment logic removed
 
   private generateBookingId(): string {
     return 'B' + Math.random().toString(36).substr(2, 9).toUpperCase();
-  }
-
-  private startTimer(): void {
-    this.timerMinutes = 5;
-    this.timerSeconds = 0;
-    this.timerInterval = setInterval(() => {
-      if (this.timerSeconds > 0) {
-        this.timerSeconds--;
-      } else if (this.timerMinutes > 0) {
-        this.timerMinutes--;
-        this.timerSeconds = 59;
-      } else {
-        clearInterval(this.timerInterval);
-        this.showPayment = false;
-        this.showAlertModal('Session Timed Out', 'Payment session timed out.');
-      }
-    }, 1000);
-  }
-
-  private stopTimer(): void {
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval);
-    }
   }
 
   playTrailer(): void {
@@ -309,14 +300,15 @@ export class MovieComponent implements OnInit, OnDestroy {
     }
   }
 
+
+  closeAlert(): void {
+    this.showAlert = false;
+  }
+
   showAlertModal(title: string, message: string): void {
     this.alertTitle = title;
     this.alertMessage = message;
     this.showAlert = true;
-  }
-
-  closeAlert(): void {
-    this.showAlert = false;
   }
 
   getStarRating(rating: number): string {

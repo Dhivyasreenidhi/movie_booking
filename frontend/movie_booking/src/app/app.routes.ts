@@ -56,7 +56,7 @@ import { ProfileComponent } from './user/profile/profile.component';
 import { BookingManagementComponent } from './user/booking-management/booking-management.component';
 import { ShowtimeSelectionssComponent } from './user/showtime-selectionss/showtime-selectionss.component';
 import { PaymentProcessComponent } from './user/payment-process/payment-process.component';
-
+import { PaymenttComponent } from './user/paymentt/paymentt.component';
 
  
   
@@ -65,6 +65,8 @@ import { PaymentProcessComponent } from './user/payment-process/payment-process.
 
 
 export const routes: Routes = [
+
+  { path: 'paymentt', component: PaymenttComponent },
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: HomeComponent },
   { path: 'login', component: LoginComponent },
@@ -93,6 +95,7 @@ export const routes: Routes = [
   { path: 'filter', component:FiltersComponent},
   { path: 'feedbacks', component:FeedbacksComponent},
   { path: 'moviess', component:MoviessComponent},
+  { path: 'moviess/:id', component: MoviessComponent },
   { path: 'reports', component:ReportsComponent},
 
 
@@ -108,6 +111,7 @@ export const routes: Routes = [
   { path: 'user-footer', component:FootersComponent},
   { path: 'user-home', component:UserHomeComponent},
   { path: 'user-movie', component:MovieComponent},
+  { path: 'user-movie/:id', component: MovieComponent },
   { path: 'user-movie-header', component:MovieHeaderComponent},
   { path: 'user-movie-synopsis', component:MovieSynopsisComponent},
   { path: 'user-reviews', component: UserReviewsComponent},

@@ -6,7 +6,7 @@
         <div *ngFor="let movie of movies" 
              class="text-center flex flex-col hover:scale-105 transition-transform duration-300 group">
             <div class="relative overflow-hidden rounded-lg shadow-lg">
-                <img [src]="movie.image" [alt]="movie.title" 
+                <img [src]="movie.posterUrl || 'https://via.placeholder.com/1200x600?text=No+Poster'" [alt]="movie.title" 
                      class="w-full h-110 object-cover rounded-lg group-hover:opacity-90 transition-opacity duration-300">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent 
                            opacity-0 group-hover:opacity-100 transition-opacity duration-300 
@@ -14,10 +14,10 @@
                     <div class="w-full">
                         <h3 class="text-lg font-semibold text-white mb-2">{{movie.title}}</h3>
                         <div class="flex items-center text-yellow-400 mb-2">
-                            <span class="mr-1">{{movie.rating}}</span>
+                            <span class="mr-1">{{movie.userRating + '/5'}}</span>
                             <span *ngIf="movie.votes" class="text-white text-sm ml-2">{{movie.votes}}</span>
                         </div>
-                        <a [routerLink]="'/user-movie'" 
+                        <a [routerLink]="['/user-movie', movie.id]" 
    class="w-full bg-gradient-to-r from-red-700 to-red-900 hover:bg-red-700 text-white py-2 rounded-md 
    transition-colors duration-300 inline-block">
     Book Now

@@ -1,3 +1,4 @@
+// ...existing code...
 import { Component, OnInit } from '@angular/core';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
@@ -10,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDialogModule } from '@angular/material/dialog';
 import { SidebarComponent } from '../components/sidebar/sidebar.component';
 import { NavBarComponent } from '../components/nav-bar/nav-bar.component';
-import { ActivatedRoute } from '@angular/router';
+
 
 interface Movie {
   id: string;
@@ -68,7 +69,7 @@ export class ManageShowtimesComponent implements OnInit {
   showEditConfirm: boolean = false;
   showSeatBookings: boolean = false;
   selectedShowtimeForSeats: Showtime | null = null;
-  bookedSeats: boolean[] = [];
+  seats: any[] = [];
   showtimeToDelete: string | null = null;
   lastAction: string = '';
   minDate: string = '';
@@ -77,7 +78,7 @@ export class ManageShowtimesComponent implements OnInit {
   private moviesApiUrl = 'http://localhost:5000/api/movies';
   private showtimesApiUrl = 'http://localhost:5000/api/showtimes';
 
-  constructor(private http: HttpClient, private route: ActivatedRoute) {
+  constructor(private http: HttpClient) {
     const now = new Date();
     this.minDate = now.toISOString().split('T')[0];
     this.minTime = now.toTimeString().slice(0, 5);
@@ -158,49 +159,27 @@ export class ManageShowtimesComponent implements OnInit {
 
   openSeatBookings(showtime: Showtime): void {
     this.selectedShowtimeForSeats = { ...showtime };
-    this.bookedSeats = Array(showtime.total_seats).fill(false);
-    const bookedCount = showtime.total_seats - showtime.available_seats;
-    for (let i = 0; i < bookedCount; i++) {
-      this.bookedSeats[i] = true;
-    }
+    this.seats = [];
     this.showSeatBookings = true;
+    // Fetch real seat data from backend
+    this.http.get<any[]>(`/api/seats/${showtime.id}`).subscribe({
+      next: (seats) => {
+        this.seats = seats;
+      },
+      error: () => {
+        this.seats = [];
+      }
+    });
   }
 
   closeSeatBookings(): void {
     this.showSeatBookings = false;
     this.selectedShowtimeForSeats = null;
-    this.bookedSeats = [];
+    this.seats = [];
   }
 
-  toggleSeatBooking(index: number): void {
-    if (!this.selectedShowtimeForSeats) return;
 
-    this.bookedSeats[index] = !this.bookedSeats[index];
-    const bookedCount = this.bookedSeats.filter(seat => seat).length;
-    this.selectedShowtimeForSeats.available_seats = this.selectedShowtimeForSeats.total_seats - bookedCount;
-
-    // Update the showtime in the backend
-    const showtimeData: Showtime = {
-      ...this.selectedShowtimeForSeats,
-      // No movieTitle, only showtime fields
-    };
-
-    this.http.put<Showtime>(`${this.showtimesApiUrl}/${this.selectedShowtimeForSeats.id}`, showtimeData).subscribe({
-      next: (updatedShowtime) => {
-        this.showtimes = this.showtimes.map(s => s.id === updatedShowtime.id ? updatedShowtime : s);
-        this.applyFilters();
-        this.lastAction = `Seat booking updated for showtime ID ${updatedShowtime.id} on Screen ${updatedShowtime.screen}`;
-        this.showSaveConfirm = true;
-      },
-      error: (error) => {
-        console.error('Error updating seat booking:', error);
-        this.showNotification('Failed to update seat booking', 'error');
-        // Revert changes if API call fails
-        this.bookedSeats[index] = !this.bookedSeats[index];
-        this.selectedShowtimeForSeats!.available_seats = this.selectedShowtimeForSeats!.total_seats - this.bookedSeats.filter(seat => seat).length;
-      }
-    });
-  }
+  // No toggleSeatBooking: admin view only, seats are fetched from backend
 
   confirmSaveShowtime(): void {
     if (!this.isValidShowtime()) {
@@ -306,20 +285,55 @@ export class ManageShowtimesComponent implements OnInit {
   }
 
   private isValidShowtime(): boolean {
-    const selectedDateTime = new Date(`${this.selectedShowtime.show_date}T${this.selectedShowtime.show_time}`);
+    const s = this.selectedShowtime;
+    if (!s) return false;
+    const selectedDateTime = new Date(`${s.show_date}T${s.show_time}`);
     const now = new Date();
-    return !!this.selectedShowtime.movie_id &&
-           !!this.selectedShowtime.screen &&
-           !!this.selectedShowtime.show_date &&
-           !!this.selectedShowtime.show_time &&
-           selectedDateTime >= now &&
-           this.selectedShowtime.total_seats > 0 &&
-           this.selectedShowtime.available_seats >= 0 &&
-           this.selectedShowtime.available_seats <= this.selectedShowtime.total_seats;
+    if (!s.movie_id || s.movie_id === 0) {
+      this.showNotification('Please select a movie.', 'error');
+      return false;
+    }
+    if (!s.screen || s.screen.trim() === '') {
+      this.showNotification('Please select a screen.', 'error');
+      return false;
+    }
+    if (!s.show_date) {
+      this.showNotification('Please select a show date.', 'error');
+      return false;
+    }
+    if (!s.show_time) {
+      this.showNotification('Please select a show time.', 'error');
+      return false;
+    }
+    if (selectedDateTime < now) {
+      this.showNotification('Showtime must be today or later.', 'error');
+      return false;
+    }
+    if (!s.total_seats || s.total_seats < 1) {
+      this.showNotification('Total seats must be greater than 0.', 'error');
+      return false;
+    }
+    if (s.available_seats == null || s.available_seats < 0 || s.available_seats > s.total_seats) {
+      this.showNotification('Seats available must be between 0 and total seats.', 'error');
+      return false;
+    }
+    return true;
   }
 
   private showNotification(message: string, type: 'success' | 'error'): void {
     this.lastAction = message;
     this.showSaveConfirm = true;
+  }
+
+  get totalSeatsCount(): number {
+    return this.selectedShowtimeForSeats?.total_seats || 0;
+  }
+
+  get availableSeatsCount(): number {
+    return this.seats ? this.seats.filter(seat => seat.status === 'available').length : 0;
+  }
+
+  get bookedSeatsCount(): number {
+    return this.seats ? this.seats.filter(seat => seat.status === 'booked').length : 0;
   }
 }

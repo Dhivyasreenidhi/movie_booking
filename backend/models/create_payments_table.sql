@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    movie_title VARCHAR(255) NOT NULL,
+    showtime VARCHAR(255) NOT NULL,
+    theater VARCHAR(255) NOT NULL,
+    seats VARCHAR(255) NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    discount DECIMAL(10,2) DEFAULT 0,
+    offer_used VARCHAR(100),
+    payment_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

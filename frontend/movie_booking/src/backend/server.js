@@ -1,3 +1,35 @@
+// Get a single movie by ID (all fields, empty if missing)
+app.get('/api/movies/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('SELECT * FROM movies WHERE id = ?', [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Movie not found' });
+    }
+    const row = results[0];
+    // Ensure all fields are present for the movie
+    const movie = {
+      id: row.id,
+      title: row.title || '',
+      description: row.description || '',
+      genre: row.genre || '',
+      releaseDate: row.releaseDate ? row.releaseDate.toISOString().split('T')[0] : '',
+      duration: row.duration || 0,
+      director: row.director || '',
+      cast: row.cast || '',
+      language: row.language || '',
+      posterUrl: row.posterUrl || '',
+      trailerUrl: row.trailerUrl || '',
+      userRating: row.userRating || 0,
+      votes: row.votes || 0,
+      createdAt: row.createdAt || null,
+      updatedAt: row.updatedAt || null
+    };
+    res.json(movie);
+  });
+});
 // ...existing code...
 // ...existing code...
 // ...existing code...

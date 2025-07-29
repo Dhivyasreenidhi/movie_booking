@@ -4,21 +4,21 @@
     <h1 class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)] ">MOVIES</h1>
     
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 py-4">
-        <div *ngFor="let movie of movies" 
+        <div *ngFor="let item of showtimesWithMovie" 
              class="text-center flex flex-col hover:scale-105 transition-transform duration-300 group">
             <div class="relative overflow-hidden rounded-lg shadow-lg">
-                <img [src]="movie.image" [alt]="movie.title" 
+                <img [src]="item.movie?.posterUrl || item.movie?.image" [alt]="item.movie?.title" 
                      class="w-full h-110 object-cover rounded-lg group-hover:opacity-90 transition-opacity duration-300">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent 
                            opacity-0 group-hover:opacity-100 transition-opacity duration-300 
                            flex items-end p-4">
                     <div class="w-full">
-                        <h3 class="text-lg font-semibold text-white mb-2">{{movie.title}}</h3>
+                        <h3 class="text-lg font-semibold text-white mb-2">{{item.movie?.title}}</h3>
                         <div class="flex items-center text-yellow-400 mb-2">
-                            <span class="mr-1">{{movie.rating}}</span>
-                            <span *ngIf="movie.votes" class="text-white text-sm ml-2">{{movie.votes}}</span>
+                            <span class="mr-1">{{item.movie?.userRating || item.movie?.rating}}</span>
+                            <span *ngIf="item.movie?.votes" class="text-white text-sm ml-2">{{item.movie?.votes}}</span>
                         </div>
-                        <a [routerLink]="'/moviess'" 
+                        <a [routerLink]="['/moviess', item.movie?.id]"
    class="w-full bg-gradient-to-r from-red-700 to-red-900 hover:bg-red-700 text-white py-2 rounded-md 
    transition-colors duration-300 inline-block">
     Book Now
@@ -26,7 +26,6 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
 </div>

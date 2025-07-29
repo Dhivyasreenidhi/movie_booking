@@ -315,15 +315,15 @@
             </div>
             <div class="text-center">
               <p class="text-gray-300 mb-4">
-                Total Seats: {{selectedShowtimeForSeats?.total_seats}} |
-                Available: {{selectedShowtimeForSeats?.available_seats}} |
-                Booked: {{bookedSeats.length}}
+                Total Seats: {{ totalSeatsCount }} |
+                Available: {{ availableSeatsCount }} |
+                Booked: {{ bookedSeatsCount }}
               </p>
               <div class="flex flex-wrap justify-center gap-2">
-                <ng-container *ngFor="let i of [].constructor(selectedShowtimeForSeats?.total_seats || 0); let index = index">
-                  <div class="seat" [ngClass]="bookedSeats[index] ? 'seat-booked' : 'seat-available'"
-                       (click)="toggleSeatBooking(index)"
-                       [attr.aria-label]="bookedSeats[index] ? 'Booked seat' : 'Available seat'">
+                <ng-container *ngFor="let seat of seats">
+                  <div class="seat" [ngClass]="seat.status === 'booked' ? 'seat-booked' : 'seat-available'"
+                       [attr.aria-label]="seat.status === 'booked' ? 'Booked seat' : 'Available seat'">
+                    {{seat.seat_number}}
                   </div>
                 </ng-container>
               </div>

@@ -1,5 +1,4 @@
-// --- LOGIN/SIGNUP ENDPOINTS ---
-// ...existing code...
+
 const express = require('express');
 const pool = require('./config/db');
 const cors = require('cors');
@@ -7,6 +6,84 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Payment details endpoint
+app.post('/api/payments', (req, res) => {
+  // ...existing code...
+  // No placeholder image logic in backend; if needed, handle in frontend.
+  const { movie, showtime, theater, seats, amount, discount, offerUsed } = req.body;
+  const sql = `INSERT INTO payments (movie_title, showtime, theater, seats, amount, discount, offer_used) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  pool.query(sql, [movie, showtime, theater, seats.join(','), amount, discount, offerUsed], (err, result) => {
+    if (err) {
+      console.error('Error inserting payment:', err);
+      return res.status(500).json({ error: 'Failed to store payment details' });
+    }
+    res.json({ success: true, paymentId: result.insertId });
+  });
+});
+
+// --- SEATS ENDPOINTS ---
+// Get all seats for a showtime
+app.get('/api/seats/:showtimeId', async (req, res) => {
+  const { showtimeId } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT * FROM seats WHERE showtime_id=? ORDER BY seat_number', [showtimeId]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Book seats for a showtime
+app.post('/api/seats/book', async (req, res) => {
+  const { showtimeId, seatNumbers } = req.body; // seatNumbers: array of seat numbers
+  try {
+    await pool.query(
+      'UPDATE seats SET status="booked" WHERE showtime_id=? AND seat_number IN (?) AND status="available"',
+      [showtimeId, seatNumbers]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Add a new showtime and auto-create seats
+app.post('/api/showtimes', async (req, res) => {
+  const { movie_id, show_date, show_time, screen, total_seats, available_seats } = req.body;
+  try {
+    // Insert showtime
+    const [result] = await pool.query(
+      'INSERT INTO showtimes (movie_id, show_date, show_time, screen, total_seats, available_seats) VALUES (?, ?, ?, ?, ?, ?)',
+      [movie_id, show_date, show_time, screen, total_seats, available_seats]
+    );
+    const showtimeId = result.insertId;
+    // Auto-create seats for this showtime
+    const seatRows = [];
+    for (let i = 1; i <= total_seats; i++) {
+      seatRows.push([showtimeId, i, 'available']);
+    }
+    await pool.query('INSERT INTO seats (showtime_id, seat_number, status) VALUES ?', [seatRows]);
+    res.json({ id: showtimeId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get all showtimes for a specific movie (must be after app is defined)
+app.get('/api/showtimes/movie/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM showtimes WHERE movie_id = ? ORDER BY show_time ASC',
+      [id]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 
 // Get all offers
@@ -372,7 +449,6 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-
 // --- VERIFY OTP ENDPOINT (in-memory, one-time) ---
 app.post('/api/verify-otp', async (req, res) => {
   const { emailOrPhone, otp } = req.body;
@@ -483,10 +559,6 @@ app.delete('/api/homepage-banner/:id', async (req, res) => {
 });
 
 // --- LOGIN/SIGNUP ENDPOINTS ---
-
-// --- LOGIN ENDPOINT (send OTP for login, in-memory only) ---
-// NOTE: For development/testing, the OTP is returned in the response as { otp: ... }.
-// Display this OTP in your frontend for easy testing.
 app.post('/api/login', async (req, res) => {
   const { emailOrPhone } = req.body;
   if (!emailOrPhone) {

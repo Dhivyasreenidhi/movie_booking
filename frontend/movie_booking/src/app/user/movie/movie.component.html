@@ -1,4 +1,3 @@
-
 <div class="relative min-h-screen bg-gray-900 overflow-hidden transition-colors duration-300" [ngClass]="{'bg-gray-100': isLightTheme}">
   <!-- Background Effects -->
   <div class="fixed inset-0 z-0 bg-gradient-to-b from-[#4b0000]/95 via-black/70 to-[#4b0000]/95" [ngClass]="{'from-gray-300/95 via-white/70 to-gray-300/95': isLightTheme}"></div>
@@ -20,11 +19,6 @@
         <div class="w-16 h-1 bg-orange-400 mx-4"></div>
         <div class="flex items-center">
           <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
-          <span class="ml-2 text-sm font-semibold">Payment</span>
-        </div>
-        <div class="w-16 h-1 bg-gray-600 mx-4"></div>
-        <div class="flex items-center">
-          <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
           <span class="ml-2 text-sm font-semibold">Confirmation</span>
         </div>
       </div>
@@ -33,18 +27,18 @@
       <div class="mb-8 flex flex-col md:flex-row gap-6 items-center">
         <div class="poster-hero w-full md:w-1/4">
           <img 
-            src="https://assetscdn1.paytm.com/images/cinema/3-BHK--46c84b60-30b9-11f0-b426-a50671acfc24.jpg?format=webp" 
-            alt="3BHK Movie Poster" 
+            [src]="movie.posterUrl || 'https://via.placeholder.com/1200x600?text=No+Poster'" 
+            [alt]="movie.title + ' Movie Poster'" 
             class="poster-image w-full rounded-lg shadow-lg transition-transform transform hover:scale-105"
-            onerror="this.src='https://via.placeholder.com/1200x600?text=3BHK+Poster'"
+            (error)="movie.posterUrl = 'https://via.placeholder.com/1200x600?text=No+Poster'"
           >
         </div>
         <div class="w-full md:w-3/4">
           <h1 class="text-4xl sm:text-5xl font-extrabold animate-fade-in" [ngClass]="{'text-gray-900': isLightTheme}">{{movie.title}}</h1>
           <div class="flex flex-wrap items-center gap-4 mt-4">
             <span class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{{movie.rating}} • {{movie.duration}}</span>
-            <span class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{{movie.genres}}</span>
-            <span class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{{movie.languages}}</span>
+            <span class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{{movie.genre}}</span>
+            <span class="text-orange-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(251,146,60,0.7)]">{{movie.language}}</span>
           </div>
           <div class="flex flex-col sm:flex-row gap-3 mt-4 items-start">
             <button (click)="playTrailer()" class="bg-gradient-to-r from-red-700 to-red-900 hover:bg-red-700 text-white px-6 py-2 rounded-full flex items-center transition-transform transform hover:scale-105 w-full sm:w-auto">
@@ -62,7 +56,6 @@
 
 
       <!-- Theater Booking Component -->
-      <app-theater-booking></app-theater-booking>
 
       <!-- Seat Selection Modal -->
       <div *ngIf="showSeatSelection" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
@@ -111,158 +104,43 @@
             </div>
             <div class="flex gap-4 mt-4 sm:mt-0">
               <button (click)="showSeatSelection = false" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">Cancel</button>
-              <button (click)="proceedToPayment()" [disabled]="selectedSeats.length === 0" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">Proceed to Payment</button>
+              <button (click)="confirmBooking()" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">Confirm Booking</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Payment Modal -->
-      <div *ngIf="showPayment" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-        <div class="bg-gray-800 p-4 sm:p-8 rounded-2xl max-w-2xl w-full shadow-2xl">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl sm:text-3xl font-bold text-white">Payment - {{selectedTheater}} ({{selectedTime}})</h2>
-            <button (click)="showPayment = false" class="text-gray-400 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
-          </div>
-          <!-- Countdown Timer -->
-          <div class="text-center mb-6">
-            <p class="text-white text-lg">Complete payment in: <span class="font-bold">{{timerMinutes}}:{{timerSeconds | number:'2.0'}}</span></p>
-          </div>
-          <!-- Payment Options -->
-          <div class="mb-6">
-            <h3 class="text-xl font-semibold text-white mb-4">Select Payment Method</h3>
-            <div class="grid grid-cols-3 gap-4">
-              <button (click)="selectPaymentMethod('upi')" [ngClass]="{'bg-blue-700': paymentMethod === 'upi', 'bg-gray-600': paymentMethod !== 'upi'}"
-                      class="p-4 rounded-lg text-white font-semibold transition-transform transform hover:scale-105">
-                UPI
-              </button>
-              <button (click)="selectPaymentMethod('card')" [ngClass]="{'bg-blue-700': paymentMethod === 'card', 'bg-gray-600': paymentMethod !== 'card'}"
-                      class="p-4 rounded-lg text-white font-semibold transition-transform transform hover:scale-105">
-                Card
-              </button>
-              <button (click)="selectPaymentMethod('netbanking')" [ngClass]="{'bg-blue-700': paymentMethod === 'netbanking', 'bg-gray-600': paymentMethod !== 'netbanking'}"
-                      class="p-4 rounded-lg text-white font-semibold transition-transform transform hover:scale-105">
-                Net Banking
-              </button>
-            </div>
-          </div>
-          <!-- Payment Form -->
-          <div *ngIf="paymentMethod === 'upi'" class="mb-6">
-            <label class="block text-white mb-2">UPI ID</label>
-            <input [(ngModel)]="upiId" type="text" placeholder="example@upi" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
-          </div>
-          <div *ngIf="paymentMethod === 'card'" class="mb-6">
-            <label class="block text-white mb-2">Card Number</label>
-            <input [(ngModel)]="cardNumber" type="text" placeholder="1234 5678 9012 3456" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
-            <div class="grid grid-cols-2 gap-4 mt-4">
-              <div>
-                <label class="block text-white mb-2">Expiry</label>
-                <input [(ngModel)]="cardExpiry" type="text" placeholder="MM/YY" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
-              </div>
-              <div>
-                <label class="block text-white mb-2">CVV</label>
-                <input [(ngModel)]="cardCvv" type="text" placeholder="123" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
-              </div>
-            </div>
-          </div>
-          <div *ngIf="paymentMethod === 'netbanking'" class="mb-6">
-            <label class="block text-white mb-2">Select Bank</label>
-            <select [(ngModel)]="bank" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-600">
-              <option value="">Select Bank</option>
-              <option value="sbi">State Bank of India</option>
-              <option value="hdfc">HDFC Bank</option>
-              <option value="icici">ICICI Bank</option>
-            </select>
-          </div>
-          <!-- Payment Actions -->
-          <div class="flex justify-between">
-            <button (click)="showPayment = false" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">Cancel</button>
-            <button (click)="processPayment()" class="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105" [disabled]="isProcessing">
-              <span *ngIf="!isProcessing">Pay ₹{{selectedSeats.length * ticketPrice}}</span>
-              <span *ngIf="isProcessing" class="flex items-center">
-                <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                Processing...
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Confirmation Modal -->
-      <div *ngIf="showConfirmation" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-        <div class="bg-gray-800 p-4 sm:p-8 rounded-2xl max-w-2xl w-full shadow-2xl">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl sm:text-3xl font-bold text-white">Booking Confirmed!</h2>
-            <button (click)="showConfirmation = false" class="text-gray-400 hover:text-white"><i class="fas fa-times text-2xl"></i></button>
-          </div>
-          <div class="bg-gray-700 p-6 rounded-lg">
-            <p class="text-white text-lg mb-2"><strong>Movie:</strong> {{movie.title}}</p>
-            <p class="text-white text-lg mb-2"><strong>Theater:</strong> {{selectedTheater}}</p>
-            <p class="text-white text-lg mb-2"><strong>Time:</strong> {{selectedTime}}</p>
-            <p class="text-white text-lg mb-2"><strong>Seats:</strong> {{selectedSeats.join(', ')}}</p>
-            <p class="text-white text-lg mb-2"><strong>Total Paid:</strong> ₹{{selectedSeats.length * ticketPrice}}</p>
-            <p class="text-white text-lg"><strong>Booking ID:</strong> {{bookingId}}</p>
-          </div>
-          <div class="flex justify-end mt-6">
-            <button (click)="showConfirmation = false" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">Close</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Custom Alert Modal -->
-      <div *ngIf="showAlert" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-        <div class="bg-gray-800 p-6 rounded-2xl max-w-md w-full shadow-2xl">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold text-white">{{alertTitle}}</h3>
-            <button (click)="closeAlert()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-          </div>
-          <p class="text-gray-300">{{alertMessage}}</p>
-          <div class="flex justify-end mt-6">
-            <button (click)="closeAlert()" class="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-full transition-transform transform hover:scale-105">OK</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Reviews & More Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12">
-        <!-- Reviews -->
-        <div>
-          <h2 class="text-2xl sm:text-3xl font-bold text-white mb-6 animate-slide-in" [ngClass]="{'text-gray-900': isLightTheme}">Reviews</h2>
-          <div class="space-y-6">
-            <div *ngFor="let review of reviews" class="bg-gray-800 p-6 rounded-2xl shadow-lg">
-              <div class="flex items-center mb-4">
-                <div class="text-yellow-400 text-xl">{{getStarRating(review.rating)}}</div>
-                <span class="ml-3 font-semibold text-white">{{review.rating}}/5</span>
-              </div>
-              <p class="text-gray-300">"{{review.comment}}"</p>
-              <p class="text-sm text-gray-500 mt-3">- {{review.author}} ({{review.date}})</p>
-            </div>
-            <button (click)="openReviewModal()" class="mt-6 bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-full transition-transform transform hover:scale-105">Write a Review</button>
-          </div>
-        </div>
-        
-        <!-- More Info -->
-        <div>
-          <h2 class="text-2xl sm:text-3xl font-bold text-white mb-6 animate-slide-in" [ngClass]="{'text-gray-900': isLightTheme}">More Info</h2>
-          <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
-            <h3 class="font-bold text-xl text-white mb-4">Synopsis</h3>
-            <p class="text-gray-300 mb-4" [ngClass]="{'line-clamp-3': !showFullSynopsis}">{{movie.synopsis}}</p>
-            <button (click)="toggleSynopsis()" class="text-blue-400 hover:text-blue-500 font-semibold transition-colors">
-              {{showFullSynopsis ? 'Show Less' : 'Read More'}}
-            </button>
-            <h3 class="font-bold text-xl text-white mb-4 mt-8">Cast</h3>
-            <div class="flex flex-wrap gap-6">
-              <div *ngFor="let actor of cast" class="text-center">
-                <img [src]="actor.photoUrl" class="w-20 h-20 rounded-full mb-2 object-cover shadow-md transition-transform transform hover:scale-110" alt="{{actor.name}}" onerror="this.src='https://via.placeholder.com/80?text=Actor'">
-                <p class="text-sm text-white">{{actor.name}}</p>
-                <p class="text-xs text-gray-400">{{actor.role}}</p>
-              </div>
+      <!-- KG CINEMAS and address (static) -->
+      <div class="bg-[#232b38] rounded-2xl p-8 mt-8 shadow-lg">
+        <h2 class="text-2xl font-bold text-orange-400 mb-2">KG CINEMAS</h2>
+        <div class="text-gray-300 mb-2">Race Course, Coimbatore</div>
+        <div class="text-gray-400 mb-4 text-sm">0.6 km away</div>
+        <ng-container *ngIf="kgScreens.length > 0; else noShowtimes">
+          <div *ngFor="let screen of kgScreens" class="mb-4">
+            <div class="font-semibold text-lg text-white mb-2">{{screen.name}}</div>
+            <div class="flex flex-wrap gap-3">
+              <ng-container *ngIf="screen.showtimes.length > 0; else noScreenShowtimes">
+                <ng-container *ngFor="let st of screen.showtimes">
+                  <button 
+                    class="bg-gray-800 text-orange-300 px-5 py-2 rounded-full border-2 border-orange-400 font-semibold shadow hover:bg-orange-700 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    [disabled]="st.available_seats === 0"
+                    (click)="openSeatSelection(screen.name, st.show_time)"
+                  >
+                    {{st.show_time}}<br>
+                    <span class="text-xs text-gray-400">Seats: {{st.available_seats}} / {{st.total_seats}}</span>
+                  </button>
+                </ng-container>
+              </ng-container>
+              <ng-template #noScreenShowtimes>
+                <span class="text-gray-400">No showtimes for this screen.</span>
+              </ng-template>
             </div>
           </div>
-        </div>
+        </ng-container>
+        <ng-template #noShowtimes>
+          <div class="text-gray-400 text-center py-8">No showtimes available for this movie.</div>
+        </ng-template>
       </div>
     </div>
     <app-footers></app-footers>
