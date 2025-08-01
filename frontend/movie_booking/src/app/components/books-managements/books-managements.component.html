@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineAdmin - Movie Theater Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #dc2626;
+      --primary-light: #ef4444;
+      --primary-dark: #b91c1c;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --dark: #111827;
+      --light: #f9fafb;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color:  #030712;
+      color: #f3f4f6;
+      min-height: 130vh;
+    }
+    
+    .sidebar-item {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .sidebar-item:hover {
+      transform: translateX(4px);
+      background-color: rgba(220, 38, 38, 0.1);
+    }
+    
+    .stat-card {
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-badge {
+      transition: all 0.2s ease;
+      min-width: 80px;
+      text-align: center;
+    }
+    
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .chart-container {
+      transition: all 0.3s ease;
+    }
+    
+    .tab-active {
+      position: relative;
+      color: var(--primary);
+    }
+    
+    .tab-active:after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background-color: var(--primary);
+      border-radius: 3px;
+    }
+    
+    .user-avatar {
+      transition: transform 0.3s ease;
+    }
+    
+    .user-avatar:hover {
+      transform: scale(1.1);
+    }
+    
+    .table-row {
+      transition: background-color 0.2s ease;
+    }
+    
+    .table-row:hover {
+      background-color: rgba(31, 41, 55, 0.8);
+    }
+    
+    .dropdown-menu {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+    }
+    
+    .dropdown:hover .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+
+    /* Layout styles */
+    .main-container {
+      display: grid;
+      grid-template-areas: 
+        "navbar navbar"
+        "sidebar content";
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    app-nav-bar {
+      grid-area: navbar;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    app-sidebar {
+  grid-area: sidebar;
+  position: sticky;
+  top: 0;
+  align-self: start; /* Ensures it aligns at the top of the grid area */
+}
+
+    .content-area {
+      grid-area: content;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Header -->
+    <app-nav-bar></app-nav-bar>
+    
+    <!-- Sidebar -->
+    <app-sidebar></app-sidebar>
+
+<div class="max-w-full mx-auto mt-8 p-6 rounded-lg shadow-lg">
+  <!-- Filters and Search Bar -->
+  <div class="flex flex-wrap gap-4 mb-4 items-center justify-between">
+    <div>
+      <label for="statusFilter" class="mr-2 text-gray-300">Status:</label>
+      <select id="statusFilter" [(ngModel)]="filterStatus" (change)="applyFilters()" class="px-2 py-1 rounded bg-gray-800 text-gray-100">
+        <option value="">All</option>
+        <option value="watched">Watched</option>
+        <option value="pending">Pending</option>
+        <option value="wants_refund">Wants Refund</option>
+        <option value="refunded">Refunded</option>
+  <!-- <option value="enclosed">Enclosed</option> -->
+      </select>
+    </div>
+    <div>
+      <label for="movieSearch" class="mr-2 text-gray-300">Movie:</label>
+      <input id="movieSearch" type="text" [(ngModel)]="searchQuery" (input)="searchBookings()" placeholder="Search by movie name..." class="px-2 py-1 rounded bg-gray-800 text-gray-100" />
+    </div>
+  </div>
+  <h2 class="text-2xl font-bold mb-4 text-red-400">Booking Management</h2>
+  <div *ngIf="loading" class="text-gray-400 mb-2">Loading payments...</div>
+  <div *ngIf="error" class="text-red-400 mb-2">{{error}}</div>
+  <div *ngIf="!loading && payments.length > 0">
+  <table class="w-full rounded shadow mb-4 bg-gray-900 text-gray-100" style="min-width:1000px;">
+      <thead class="bg-gray-800 text-gray-300">
+        <tr>
+          <th class="px-3 py-2">Payment ID</th>
+          <th class="px-3 py-2">User ID</th>
+          <th class="px-3 py-2">Movie</th>
+          <th class="px-3 py-2">Showtime</th>
+          <th class="px-3 py-2">Theater</th>
+          <th class="px-3 py-2">Seats</th>
+          <th class="px-3 py-2">Amount</th>
+          <th class="px-3 py-2">Discount</th>
+          <th class="px-3 py-2">Offer Used</th>
+          <th class="px-3 py-2">Status</th>
+          <th class="px-3 py-2">Admin Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+  <tr *ngFor="let payment of paginatedPayments" class="table-row bg-gray-900 hover:bg-gray-800">
+          <td class="px-3 py-2">{{payment.id || payment.paymentId}}</td>
+          <td class="px-3 py-2">{{payment.user_id || payment.userId}}</td>
+          <td class="px-3 py-2">{{payment.movie_title || payment.movie}}</td>
+          <td class="px-3 py-2">{{payment.showtime}}</td>
+          <td class="px-3 py-2">{{payment.theater}}</td>
+          <td class="px-3 py-2">{{payment.seats}}</td>
+          <td class="px-3 py-2">₹{{payment.amount}}</td>
+          <td class="px-3 py-2">₹{{payment.discount}}</td>
+          <td class="px-3 py-2">{{payment.offer_used || payment.offerUsed}}</td>
+          <td class="px-3 py-2">
+            <!-- Status logic -->
+            <span *ngIf="payment.status === 'watched' || payment.status === 'enclosed'" class="bg-green-700 text-green-100 px-2 py-1 rounded">Watched</span>
+            <span *ngIf="payment.status === 'pending'" class="bg-blue-700 text-blue-100 px-2 py-1 rounded">Pending</span>
+            <span *ngIf="payment.status === 'wants_refund'" class="bg-yellow-700 text-yellow-100 px-2 py-1 rounded">Wants Refund</span>
+            <span *ngIf="payment.status === 'refunded'" class="bg-red-700 text-red-100 px-2 py-1 rounded">Refunded</span>
+          </td>
+          <td class="px-3 py-2">
+            <!-- Admin Actions -->
+            <div class="flex flex-wrap gap-2 items-center">
+              <!-- View Details Icon -->
+              <button (click)="viewDetails(payment)" class="focus:outline-none" title="View Details">
+                <i class="fa-solid fa-eye text-blue-500 text-xl hover:scale-110 transition"></i>
+              </button>
+              <!-- Edit/Resend Confirmation Icon -->
+              <button (click)="acceptRefund(payment)" class="focus:outline-none" title="Resend Confirmation">
+                <i class="fa-solid fa-pen-to-square text-purple-500 text-xl hover:scale-110 transition"></i>
+              </button>
+              <!-- Delete Icon -->
+              <button (click)="confirmDelete(payment)" class="focus:outline-none" title="Delete Payment">
+                <i class="fa-solid fa-trash text-red-500 text-xl hover:scale-110 transition"></i>
+              </button>
+              <!-- Accept Refund -->
+              <button *ngIf="payment.status === 'wants_refund'" (click)="acceptRefund(payment)" class="bg-yellow-700 text-yellow-100 px-2 py-1 rounded hover:bg-yellow-600">Accept Refund</button>
+            </div>
+
+<!-- Toast Box for Details, Refund -->
+<div *ngIf="showToast" class="fixed bottom-10 right-10 z-[100] mt-16 animate-fadeIn max-w-xl w-full sm:w-[400px]">
+  <div class="bg-gray-900 border border-red-500 text-red-100 px-6 py-4 rounded-lg shadow-2xl flex flex-col gap-2 w-full">
+    <div class="flex justify-between items-center mb-2">
+      <span class="font-bold text-lg">
+  {{ toastType === 'details' ? 'Booking Details' : (toastType === 'refund' ? 'Refund Processed' : '') }}
+      </span>
+      <button (click)="closeToast()" class="text-gray-400 hover:text-red-400 text-xl"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <!-- Details Toast -->
+    <ng-container *ngIf="toastType === 'details'">
+      <div><b>Payment ID:</b> {{toastPayment?.id || toastPayment?.paymentId}}</div>
+      <div><b>Movie:</b> {{toastPayment?.movie_title}}</div>
+      <div><b>Theater:</b> {{toastPayment?.theater}}</div>
+      <div><b>Showtime:</b> {{toastPayment?.showtime}}</div>
+      <div><b>Seats:</b> {{toastPayment?.seats}}</div>
+      <div><b>Amount:</b> ₹{{toastPayment?.amount}}</div>
+      <div><b>Status:</b> {{toastPayment?.status}}</div>
+    </ng-container>
+    <!-- Refund Toast -->
+    <ng-container *ngIf="toastType === 'refund'">
+      <div class="mb-2 text-yellow-300 flex items-center"><i class="fa-solid fa-money-bill-wave mr-2"></i>
+        <span class="font-semibold">Refund processed successfully!</span>
+      </div>
+      <div class="text-yellow-200 mb-2">Your request for a refund has been accepted and processed.</div>
+      <div><b>User:</b> {{toastPayment?.user_name || toastPayment?.user || 'N/A'}}</div>
+      <div><b>Email:</b> {{toastPayment?.user_email || toastPayment?.email || 'N/A'}}</div>
+      <div><b>Payment ID:</b> {{toastPayment?.id || toastPayment?.paymentId}}</div>
+      <div><b>Movie:</b> {{toastPayment?.movie_title}}</div>
+      <div><b>Theater:</b> {{toastPayment?.theater}}</div>
+      <div><b>Showtime:</b> {{toastPayment?.showtime}}</div>
+      <div><b>Seats:</b> {{toastPayment?.seats}}</div>
+      <div><b>Amount Refunded:</b> ₹{{toastPayment?.amount}}</div>
+      <div><b>Refund Date:</b> {{toastPayment?.refund_date || (today | date:'short') }}</div>
+      <div><b>Status:</b> {{toastPayment?.status}}</div>
+      <div class="mt-2 text-xs text-yellow-200">The refund will be credited to the user's original payment method within 3-5 business days.</div>
+      <div class="mt-1 text-xs text-yellow-300">If you do not receive the refund within the expected time, please contact our support team with your payment ID for assistance.</div>
+      <div class="mt-1 text-xs text-yellow-300">Note: Refunds may take longer on weekends or public holidays.</div>
+      <div class="mt-1 text-xs text-yellow-300">Thank you for your patience!</div>
+    </ng-container>
+    <!-- Delete Confirmation Toast -->
+    <ng-container *ngIf="toastType === 'delete'">
+      <div class="mb-2 text-red-300 flex items-center"><i class="fa-solid fa-trash mr-2"></i>
+        <span class="font-semibold">Confirm Delete</span>
+      </div>
+      <div class="text-red-200 mb-2">Are you sure you want to delete this booking/payment?</div>
+      <div><b>Payment ID:</b> {{toastPayment?.id || toastPayment?.paymentId}}</div>
+      <div><b>Movie:</b> {{toastPayment?.movie_title}}</div>
+      <div><b>Theater:</b> {{toastPayment?.theater}}</div>
+      <div><b>Showtime:</b> {{toastPayment?.showtime}}</div>
+      <div><b>Amount:</b> ₹{{toastPayment?.amount}}</div>
+      <div class="flex gap-4 mt-4">
+        <button (click)="deleteBooking()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Delete</button>
+        <button (click)="closeToast()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 px-4 py-2 rounded">Cancel</button>
+      </div>
+    </ng-container>
+
+  </div>
+</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mb-2">
+      <button (click)="prevPage()" [disabled]="currentPage === 1" class="px-3 py-1 bg-red-400 rounded hover:bg-red-300">Prev</button>
+      <span>Page {{currentPage}} of {{totalPages}}</span>
+      <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-3 py-1 bg-red-400 rounded hover:bg-red-300">Next</button>
+    </div>
+  </div>
+  <div *ngIf="!loading && payments.length === 0" class="text-gray-400">No payments found.</div>
+</div>
+</div>
+</body>
+</html>

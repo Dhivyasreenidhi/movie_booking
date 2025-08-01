@@ -25,7 +25,11 @@ import { NavigationEnd } from '@angular/router';  // Add this import
   styleUrl: './home.component.css'
 })
 export class HomeComponent implements OnInit{
-constructor(private router: Router, private scrollService: ScrollserviceService) {}
+
+  public movies: any[] = [];
+  public banners: any[] = [];
+
+  constructor(private router: Router, private scrollService: ScrollserviceService) {}
 
   ngOnInit() {
     this.router.events.pipe(

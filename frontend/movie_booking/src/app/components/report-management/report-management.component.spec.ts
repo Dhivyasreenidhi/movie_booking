@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DatePipe } from '@angular/common';
 
 import { ReportManagementComponent } from './report-management.component';
 
@@ -8,7 +9,8 @@ describe('ReportManagementComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ReportManagementComponent]
+      imports: [ReportManagementComponent],
+      providers: [DatePipe]
     })
     .compileComponents();
 

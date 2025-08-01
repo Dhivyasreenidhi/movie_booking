@@ -25,4 +25,22 @@ export class HeaderComponent {
     localStorage.removeItem('user');
     window.location.reload();
   }
+
+  navigateToSection(sectionId: string) {
+    if (sectionId === 'home') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      // fallback: navigate to login or feedbacks route if needed
+      if (sectionId === 'login') {
+        window.location.href = '/login';
+      } else if (sectionId === 'feedbacks') {
+        window.location.href = '/feedbacks';
+      }
+    }
+  }
 }

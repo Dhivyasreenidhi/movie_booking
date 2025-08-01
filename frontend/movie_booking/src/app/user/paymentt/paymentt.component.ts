@@ -3,16 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { HeadersComponent } from '../headers/headers.component';
+import { FootersComponent } from '../footers/footers.component';
 
 
 @Component({
   selector: 'app-paymentt',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,HeadersComponent,FootersComponent],
   templateUrl: './paymentt.component.html',
   styleUrls: ['./paymentt.component.css']
 })
 export class PaymenttComponent {
+  public paymentIcons: string[] = [];
+  public paymentService: any;
+  showPaymentToast: boolean = false;
+  // Add paymentService property for test mocking
   showPaymentGateway: boolean = false;
   selectedTab: string = 'card';
   selectedSeats: string[] = [];
@@ -26,6 +32,10 @@ export class PaymenttComponent {
   activeOffer: string = '';
   discount: number = 0;
   offers: any[] = [];
+  isPaying: boolean = false;
+  paymentError: string = '';
+  userEmailOrPhone: string = '';
+  userId: string = '';
 
   getSubtotal(): number {
     return Number(this.selectedSeats.length) * Number(this.ticketPrice);
@@ -33,19 +43,63 @@ export class PaymenttComponent {
 
   constructor(private route: ActivatedRoute, private http: HttpClient) {
     this.route.queryParams.subscribe(params => {
-      const seats = params['seats'];
-      this.selectedSeats = seats ? seats.split(',') : [];
-      this.ticketPrice = Number(params['total']) / (this.selectedSeats.length || 1);
-      this.total = Number(params['total']) || 0;
-      this.movieId = params['movieId'] || '';
-      this.showtimeId = params['showtimeId'] || '';
+      // If coming from movie component, use query params for user and booking info
+      if (params['user']) {
+        this.userEmailOrPhone = params['user'];
+        localStorage.setItem('user', this.userEmailOrPhone);
+      } else {
+        this.userEmailOrPhone = localStorage.getItem('user') || '';
+      }
+      if (params['userId']) {
+        this.userId = params['userId'];
+        localStorage.setItem('userId', this.userId);
+      } else {
+        this.userId = localStorage.getItem('userId') || '';
+      }
+
+      this.selectedSeats = params['seats'] ? params['seats'].split(',') : (localStorage.getItem('seats') ? localStorage.getItem('seats')!.split(',') : []);
+      this.movieId = params['movie'] || localStorage.getItem('movie') || '';
+      this.showtimeId = params['showtime'] || localStorage.getItem('showtime') || '';
+      this.theater = params['theater'] || localStorage.getItem('theater') || '';
+      this.showtime = params['time'] || localStorage.getItem('time') || '';
+      this.ticketPrice = params['ticketPrice'] ? Number(params['ticketPrice']) : (localStorage.getItem('ticketPrice') ? Number(localStorage.getItem('ticketPrice')) : 250);
+      this.total = params['total'] ? Number(params['total']) : (localStorage.getItem('total') ? Number(localStorage.getItem('total')) : (this.selectedSeats.length * this.ticketPrice));
+
+      // If any key missing, fallback to localStorage.bookingInfo
+      const data = localStorage.getItem('bookingInfo');
+      if (data) {
+        const info = JSON.parse(data);
+        if ((!this.selectedSeats || this.selectedSeats.length === 0) && info.seats) this.selectedSeats = info.seats;
+        if (!this.movieId && info.movie) this.movieId = info.movie;
+        if (!this.showtimeId && info.showtime) this.showtimeId = info.showtime;
+        if (!this.theater && info.theater) this.theater = info.theater;
+        if (!this.showtime && info.time) this.showtime = info.time;
+        if (!this.ticketPrice && info.ticketPrice) this.ticketPrice = info.ticketPrice;
+        if (!this.total && info.total) this.total = info.total;
+      }
+
+      // Always fetch userId from backend if userEmailOrPhone is present and not Guest
+      if (this.userEmailOrPhone && this.userEmailOrPhone !== 'Guest') {
+        this.http.get<any>(`/api/users`).subscribe(users => {
+          const user = (users || []).find((u: any) => u.email_or_phone === this.userEmailOrPhone);
+          if (user) {
+            this.userId = user.id;
+            localStorage.setItem('userId', user.id);
+            localStorage.setItem('user', this.userEmailOrPhone);
+          }
+        });
+      }
+      // Always display latest user and userId from localStorage
+      this.userEmailOrPhone = localStorage.getItem('user') || this.userEmailOrPhone;
+      this.userId = localStorage.getItem('userId') || this.userId;
+
       if (this.movieId) this.fetchMovieDetails(this.movieId);
       if (this.showtimeId) this.fetchShowtimeDetails(this.showtimeId);
     });
   }
 
   ngOnInit() {
-    this.fetchOffers();
+  this.fetchOffers();
   }
 
   fetchOffers() {
@@ -122,7 +176,11 @@ export class PaymenttComponent {
       this.showPaymentGateway = true;
       return;
     }
+    this.isPaying = true;
+    this.paymentError = '';
+    // Use userId fetched from backend
     const paymentData = {
+      user_id: this.userId,
       movie: this.movieTitle,
       showtime: this.showtime,
       theater: this.theater,
@@ -133,15 +191,31 @@ export class PaymenttComponent {
     };
     this.http.post('/api/payments', paymentData).subscribe({
       next: (res: any) => {
+        console.log('Payment API response:', res);
         this.paymentSuccess = true;
+        this.showPaymentToast = true;
+        setTimeout(() => {
+          this.showPaymentToast = false;
+        }, 3000);
+        console.log('Payment Success Popup Triggered:', this.paymentSuccess);
         this.paymentDetails = {
           ...paymentData,
           paymentId: res.paymentId
         };
+        // Set kgCinemasAuth in localStorage for header update
+        localStorage.setItem('kgCinemasAuth', JSON.stringify({
+          id: this.userId,
+          emailOrPhone: this.userEmailOrPhone,
+          isLoggedIn: true,
+          isAdmin: false
+        }));
         this.showPaymentGateway = false;
+        this.isPaying = false;
+        this.paymentError = '';
       },
       error: (err) => {
-        alert('Failed to store payment details. Please try again.');
+        this.isPaying = false;
+        this.paymentError = 'Failed to store payment details. Please try again.';
       }
     });
   }

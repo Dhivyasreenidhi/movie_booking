@@ -75,8 +75,8 @@ export class ManageShowtimesComponent implements OnInit {
   minDate: string = '';
   minTime: string = '';
 
-  private moviesApiUrl = 'http://localhost:5000/api/movies';
-  private showtimesApiUrl = 'http://localhost:5000/api/showtimes';
+  private moviesApiUrl = '/api/movies';
+  private showtimesApiUrl = '/api/showtimes';
 
   constructor(private http: HttpClient) {
     const now = new Date();

@@ -35,7 +35,7 @@
             <div class="relative">
               <input 
                 type="text"
-                formControlName="emailOrPhone"
+                formControlName="email_or_phone"
                 placeholder="Email or Phone Number"
                 class="w-full bg-gray-800/90 border border-gray-600 text-white py-3 px-4 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-500/50 transition-all duration-300 placeholder-gray-400"
                 (input)="checkInputType()"
@@ -57,10 +57,10 @@
             </div>
 
             <!-- Validation Messages -->
-            <div *ngIf="signupForm.get('emailOrPhone')?.invalid && (signupForm.get('emailOrPhone')?.touched || signupForm.get('emailOrPhone')?.dirty)" class="text-red-400 text-sm mt-2">
-              <div *ngIf="signupForm.get('emailOrPhone')?.errors?.['required']">This field is required</div>
-              <div *ngIf="signupForm.get('emailOrPhone')?.errors?.['invalidEmail'] && !isPhoneInput">Please enter a valid email address</div>
-              <div *ngIf="signupForm.get('emailOrPhone')?.errors?.['invalidPhone'] && isPhoneInput">Please enter a valid 10-digit phone number</div>
+            <div *ngIf="signupForm.get('email_or_phone')?.invalid && (signupForm.get('email_or_phone')?.touched || signupForm.get('email_or_phone')?.dirty)" class="text-red-400 text-sm mt-2">
+              <div *ngIf="signupForm.get('email_or_phone')?.errors?.['required']">This field is required</div>
+              <div *ngIf="signupForm.get('email_or_phone')?.errors?.['invalidEmail'] && !isPhoneInput">Please enter a valid email address</div>
+              <div *ngIf="signupForm.get('email_or_phone')?.errors?.['invalidPhone'] && isPhoneInput">Please enter a valid 10-digit phone number</div>
             </div>
           </div>
 

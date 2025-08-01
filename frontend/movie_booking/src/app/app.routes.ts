@@ -57,6 +57,9 @@ import { BookingManagementComponent } from './user/booking-management/booking-ma
 import { ShowtimeSelectionssComponent } from './user/showtime-selectionss/showtime-selectionss.component';
 import { PaymentProcessComponent } from './user/payment-process/payment-process.component';
 import { PaymenttComponent } from './user/paymentt/paymentt.component';
+import { BooksManagementsComponent } from './components/books-managements/books-managements.component';
+import { ReportManagementComponent } from './components/report-management/report-management.component';
+
 
  
   
@@ -97,8 +100,8 @@ export const routes: Routes = [
   { path: 'moviess', component:MoviessComponent},
   { path: 'moviess/:id', component: MoviessComponent },
   { path: 'reports', component:ReportsComponent},
-
-
+  { path: 'books-managements', component:BooksManagementsComponent},
+  { path: 'report-management', component:ReportManagementComponent},
 
 
   

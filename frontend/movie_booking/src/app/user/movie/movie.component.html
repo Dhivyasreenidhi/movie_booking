@@ -11,17 +11,7 @@
     <app-headers></app-headers><br><br><br>
     <div class="movie-container bg-transparent text-white max-w-7xl mx-auto p-4 sm:p-8 rounded-2xl shadow-2xl mt-20" [ngClass]="{'text-gray-900': isLightTheme}">
       <!-- Progress Stepper -->
-      <div class="flex items-center justify-center mb-8">
-        <div class="flex items-center">
-          <div class="w-8 h-8 bg-orange-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
-          <span class="ml-2 text-sm font-semibold">Select Seats</span>
-        </div>
-        <div class="w-16 h-1 bg-orange-400 mx-4"></div>
-        <div class="flex items-center">
-          <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
-          <span class="ml-2 text-sm font-semibold">Confirmation</span>
-        </div>
-      </div>
+      
 
       <!-- Title Section -->
       <div class="mb-8 flex flex-col md:flex-row gap-6 items-center">
@@ -50,6 +40,27 @@
             <button (click)="shareMovie()" class="bg-gradient-to-r from-red-700 to-red-900 hover:bg-red-700 text-white px-6 py-2 rounded-full flex items-center transition-transform transform hover:scale-105 w-full sm:w-auto">
               <i class="fas fa-share-alt mr-2"></i> Share
             </button>
+          </div>
+
+          <!-- Horizontal Calendar Bar -->
+          <div class="mt-8">
+            <div class="flex gap-2 justify-center items-center">
+              <ng-container *ngFor="let date of weekDates">
+                <button (click)="onSelectDate(date)"
+                  [ngClass]="{
+                    'bg-orange-600 text-white': date.toDateString() === selectedDate.toDateString(),
+                    'bg-gray-800 text-orange-300': date.toDateString() !== selectedDate.toDateString()
+                  }"
+                  class="px-4 py-2 rounded-lg font-semibold shadow hover:bg-orange-700 transition">
+                  <div class="text-xs font-bold">{{date | date:'EEE'}}</div>
+                  <div class="text-lg">{{date | date:'d'}}</div>
+                  <div class="text-xs">{{date | date:'MMM'}}</div>
+                </button>
+              </ng-container>
+            </div>
+            <div class="text-center mt-2 text-orange-400 font-bold text-lg">
+              Today: {{today | date:'fullDate'}}
+            </div>
           </div>
         </div>
       </div>

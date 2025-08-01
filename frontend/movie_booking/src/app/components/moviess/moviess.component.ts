@@ -7,15 +7,27 @@ import { ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { HeaderComponent } from '../header/header.component';
 import { FooterComponent } from '../footer/footer.component';
+import { SignUpEmailComponent } from '../../sign-up-email/sign-up-email.component';
 
 @Component({
   selector: 'app-moviess-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent, HttpClientModule],
+  imports: [CommonModule, FormsModule, HeaderComponent, FooterComponent, HttpClientModule, SignUpEmailComponent],
   templateUrl: './moviess.component.html',
   styleUrls: ['./moviess.component.css']
 })
 export class MoviessComponent implements OnInit {
+  showLoginPopup = false;
+  showSignupEmailPopup = false;
+  loginUsername = '';
+  loginPassword = '';
+  pendingBookingData: any = null;
+  public movieService: any;
+  // Calendar logic
+  // Add movieService property for test mocking
+  today: Date = new Date();
+  weekDates: Date[] = [];
+  selectedDate: Date = new Date();
   movie: any = {};
   kgScreens: { name: string; showtimes: any[] }[] = [];
   showtimes: any[] = [];
@@ -61,6 +73,14 @@ export class MoviessComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Generate week dates (today + next 6 days)
+    this.weekDates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(this.today.getDate() + i);
+      return d;
+    });
+    this.selectedDate = this.today;
+
     this.route.paramMap.subscribe(params => {
       const movieId = params.get('id');
       if (movieId) {
@@ -68,6 +88,10 @@ export class MoviessComponent implements OnInit {
         this.fetchShowtimes(movieId);
       }
     });
+  }
+
+  onSelectDate(date: Date): void {
+    this.selectedDate = date;
   }
 
   fetchMovieDetails(movieId: string): void {
@@ -180,9 +204,89 @@ export class MoviessComponent implements OnInit {
       alert('Please select at least one seat');
       return;
     }
-    this.showSeatSelection = false;
-    this.showConfirmation = true;
-    // Here you would call backend to book seats
+    // Check login status
+    const user = localStorage.getItem('user');
+    if (!user) {
+      // Show login popup and store booking data
+      this.pendingBookingData = {
+        movie: this.movie,
+        showtimeId: this.selectedShowtimeId,
+        seats: this.selectedSeats,
+        theater: this.selectedTheater,
+        time: this.selectedTime
+      };
+      this.showLoginPopup = true;
+      return;
+    }
+    // Show signup-email popup and store booking data
+    this.pendingBookingData = {
+      user: user,
+      movie: this.movie,
+      showtimeId: this.selectedShowtimeId,
+      seats: this.selectedSeats,
+      theater: this.selectedTheater,
+      time: this.selectedTime
+    };
+    this.showSignupEmailPopup = true;
+  }
+
+  handleLogin(): void {
+    // Simulate login (replace with real API call)
+    if (this.loginUsername && this.loginPassword) {
+      localStorage.setItem('user', this.loginUsername);
+      this.showLoginPopup = false;
+      if (this.pendingBookingData) {
+        // Show signup-email popup after login
+        this.pendingBookingData.user = this.loginUsername;
+        this.showSignupEmailPopup = true;
+        this.showLoginPopup = false;
+      }
+    } else {
+      alert('Please enter valid credentials');
+    }
+  }
+
+  // Called after successful signup in popup
+  handleSignupEmailSuccess(userId: string): void {
+    // Always create user, then fetch userId and proceed
+    // Use the actual signup value (email or phone) from the signup popup, not localStorage
+    const signupValue = userId; // userId here is the actual email or phone used for signup
+    this.http.post<any>('/api/users', { email_or_phone: signupValue }).subscribe({
+      next: () => {
+        // After creation, fetch userId
+        this.http.get<any[]>('/api/users').subscribe(users => {
+          const userObj = (users || []).find((u: any) => u.email_or_phone === signupValue);
+          const realUserId = userObj ? userObj.id : signupValue;
+          // Set kgCinemasAuth in localStorage for header update
+          localStorage.setItem('kgCinemasAuth', JSON.stringify({
+            id: realUserId,
+            emailOrPhone: signupValue,
+            isLoggedIn: true,
+            isAdmin: false
+          }));
+          // Navigate to paymentt with all booking details
+          if (!this.pendingBookingData) return;
+          const params = new URLSearchParams({
+            user: signupValue,
+            userId: String(realUserId),
+            movie: this.pendingBookingData.movie.id,
+            showtime: String(this.pendingBookingData.showtimeId),
+            seats: this.pendingBookingData.seats.join(','),
+            theater: this.pendingBookingData.theater,
+            time: this.pendingBookingData.time
+          });
+          this.showSignupEmailPopup = false;
+          window.location.href = `/paymentt?${params.toString()}`;
+          this.pendingBookingData = null;
+        });
+      },
+      error: (err) => {
+        // Show error message to user
+        this.showAlert = true;
+        this.alertTitle = 'Signup Error';
+        this.alertMessage = err?.error?.message || 'Failed to create user. Please check your details or try again.';
+      }
+    });
   }
 
   playTrailer(): void {

@@ -73,7 +73,7 @@ export class MovieManagementComponent implements OnInit {
   selectedGenre: string = '';
   selectedRating: string = '';
   currentPage: number = 1;
-  itemsPerPage: number = 8;
+  itemsPerPage: number = 4;
   totalPages: number = 1;
 
   constructor(private movieService: MovieService, private router: Router) {}

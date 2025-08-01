@@ -26,30 +26,31 @@
         <nav class="hidden md:flex font-medium ml-8">
             <div class="flex space-x-8 ml-25">
                 <!-- Navigation Links -->
-                <a routerLink="/home" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg ">
+
+                <a (click)="navigateToSection('home')" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg ">
                     <span>Home</span>
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
                 </a>
 
-                <a routerLink="/now-streaming" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
-                    <span>Movies</span>
+                <a (click)="navigateToSection('now-streaming-section')" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
+                    <span>Now Streaming</span>
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
                 </a>
 
-                <a routerLink="/coming-soon" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
+                <a (click)="navigateToSection('coming-soon-section')" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
         <span>Coming Soon</span>
         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
     </a>
-    <a routerLink="/filter" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
+    <a (click)="navigateToSection('offers-section')" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
         <span>Offers</span>
         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
     </a>
 
-    <a routerLink="/feedbacks" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
+    <a (click)="navigateToSection('feedbacks')" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
         <span>Feedback</span>
         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
     </a>
-     <a routerLink="/login" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
+     <a (click)="navigateToSection('login')" class="relative text-white hover:text-yellow-300 transition-all duration-300 group text-lg">
         <span>Login</span>
         <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-300 group-hover:w-full transition-all duration-300"></span>
      </a>

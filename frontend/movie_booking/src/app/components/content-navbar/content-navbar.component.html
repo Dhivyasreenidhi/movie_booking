@@ -4,10 +4,10 @@
       <div class="flex items-center">
         <span class="text-xl font-bold">Content Management</span>
       </div>
-      <div class="flex space-x-4">
+      <div class="flex space-x-3">
         <a
-          class="px-3 py-2 rounded-md text-sm font-medium transition-colors"
-          [class.bg-blue-600]="activeTab === 'banner'"
+          class="px-3 py-3 h-12 text-sm font-medium transition-colors"
+          [class.bg-red-600]="activeTab === 'banner'"
           [class.hover:bg-gray-700]="activeTab !== 'banner'"
           (click)="selectTab('banner')"
         >
@@ -15,36 +15,36 @@
         </a>
 
         <a
-          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          class="px-3 py-2 h-12 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
           routerLink="/content-now"
-          routerLinkActive="bg-blue-600"
+          routerLinkActive="bg-red-600"
           (click)="selectTab('streaming')"
         >
           Now Streaming
         </a>
 
         <a
-          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          class="px-3 py-2 h-12 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
           routerLink="/content-coming"
-          routerLinkActive="bg-blue-600"
+          routerLinkActive="bg-red-600"
           (click)="selectTab('coming')"
         >
           Coming Soon
         </a>
 
         <a
-          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          class="px-3 py-2 h-12 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
           routerLink="/content-trailer"
-          routerLinkActive="bg-blue-600"
+          routerLinkActive="bg-red-600"
           (click)="selectTab('trailer')"
         >
           Trailers
         </a>
 
         <a
-          class="px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
+          class="px-3 py-2 h-12 rounded-md text-sm font-medium transition-colors hover:bg-gray-700 cursor-pointer"
           routerLink="/content-offer"
-          routerLinkActive="bg-blue-600"
+          routerLinkActive="bg-red-600"
           (click)="selectTab('offer')"
         >
           Offers

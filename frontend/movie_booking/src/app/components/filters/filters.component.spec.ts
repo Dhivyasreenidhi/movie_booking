@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 
 import { FiltersComponent } from './filters.component';
 
@@ -8,7 +9,8 @@ describe('FiltersComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FiltersComponent]
+      imports: [FiltersComponent],
+      providers: [{ provide: ActivatedRoute, useValue: {} }]
     })
     .compileComponents();
 

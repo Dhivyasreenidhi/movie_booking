@@ -1,5 +1,6 @@
 // src/app/components/sign-up-email/sign-up-email.component.ts
 import { Component } from '@angular/core';
+import { Input, Output, EventEmitter } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -15,6 +16,8 @@ import { HttpClientModule } from '@angular/common/http';
   styleUrls: ['./sign-up-email.component.css']
 })
 export class SignUpEmailComponent {
+  @Input() bookingData: any;
+  @Output() signupSuccess = new EventEmitter<string>();
   isLoading = false;
   signupForm: FormGroup;
   otpForm: FormGroup;
@@ -33,7 +36,7 @@ export class SignUpEmailComponent {
     private authService: AuthService // ✅ inject AuthService
   ) {
     this.signupForm = this.fb.group({
-      emailOrPhone: ['', [Validators.required, this.emailOrPhoneValidator()]]
+      email_or_phone: ['', [Validators.required, this.emailOrPhoneValidator()]]
     });
 
     this.otpForm = this.fb.group({
@@ -54,10 +57,14 @@ export class SignUpEmailComponent {
 
   sendOtp(): void {
     if (this.signupForm.valid) {
-      this.emailOrPhoneValue = this.signupForm.get('emailOrPhone')?.value;
+      this.emailOrPhoneValue = this.signupForm.get('email_or_phone')?.value;
       this.authService.signup(this.emailOrPhoneValue).subscribe({
         next: (res) => {
-          this.generatedOTP = res.otp; // Use backend OTP
+          // Store JWT token if present
+          if (res.token) {
+            this.authService.setTokens(res.token, ''); // No refresh token for signup, just store access
+          }
+          this.generatedOTP = res.otp || '';
           this.maskedEmailOrPhone = this.isPhoneInput
             ? `+91${this.emailOrPhoneValue.substring(0, 3)}****${this.emailOrPhoneValue.substring(7)}`
             : `${this.emailOrPhoneValue.substring(0, 3)}****@${this.emailOrPhoneValue.split('@')[1]}`;
@@ -72,15 +79,36 @@ export class SignUpEmailComponent {
   }
 
   verifyOtp(): void {
+    if (this.isLoading) return; // Prevent double submit
+    this.isLoading = true;
     const enteredOTP = this.otpForm.get('otp')?.value;
     if (!enteredOTP || enteredOTP.length !== 6) {
       this.otpError = 'Please enter a 6-digit OTP';
+      this.isLoading = false;
       return;
     }
     this.authService.verifySignupOtp(this.emailOrPhoneValue, enteredOTP).subscribe({
       next: (res) => {
+        this.isLoading = false;
         if (res.success) {
           this.otpError = '';
+          // Store tokens in AuthService (in-memory, not localStorage)
+          if (res.access_token && res.refresh_token) {
+            this.authService.setTokens(res.access_token, res.refresh_token);
+          }
+          // Store user info in localStorage for header display
+          const userData = {
+            token: res.access_token,
+            isLoggedIn: true,
+            isAdmin: false,
+            username: this.emailOrPhoneValue,
+            emailOrPhone: this.emailOrPhoneValue,
+            id: res.userId || '',
+            user_id: res.userId || '',
+            timestamp: new Date().getTime()
+          };
+          localStorage.setItem('kgCinemasAuth', JSON.stringify(userData));
+          // Navigate to user home page after successful signup
           this.router.navigate(['/user-home']);
         } else if (res.message === 'This email or phone is already registered.') {
           this.otpError = 'This email or phone is already registered.';
@@ -88,7 +116,8 @@ export class SignUpEmailComponent {
           this.otpError = 'Invalid OTP. Please try again.';
         }
       },
-      error: () => {
+      error: (err) => {
+        this.isLoading = false;
         this.otpError = 'Invalid OTP. Please try again.';
       }
     });

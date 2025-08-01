@@ -16,6 +16,24 @@ import { NavBarComponent } from '../nav-bar/nav-bar.component';
   imports: [CommonModule, ReactiveFormsModule, FormsModule, BaseChartDirective,SidebarComponent,NavBarComponent]
 })
 export class ReportsComponent {
+  // Add missing properties and methods for template compatibility
+  datePresets: any[] = [
+    { value: 'today', label: 'Today' },
+    { value: 'thisWeek', label: 'This Week' },
+    { value: 'thisMonth', label: 'This Month' },
+    { value: 'custom', label: 'Custom Range' }
+  ];
+  chartTypes: string[] = ['bar', 'line', 'pie'];
+  onDatePresetChange() {
+    // Implement logic or leave empty for now
+  }
+  onChartTypeChange() {
+    // Implement logic or leave empty for now
+  }
+  getAverageOccupancy(): number {
+    // Dummy implementation, replace with actual calculation if needed
+    return 0;
+  }
   @ViewChild(BaseChartDirective) chart?: BaseChartDirective;
 
   reportForm: FormGroup;

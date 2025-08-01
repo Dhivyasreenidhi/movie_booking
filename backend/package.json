@@ -1,0 +1,15 @@
+{
+  "name": "movie-microservice",
+  "version": "1.0.0",
+  "main": "microserviceProxy.js",
+  "scripts": {
+    "start": "node microserviceProxy.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^2.0.9",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.14.3"
+  }
+}

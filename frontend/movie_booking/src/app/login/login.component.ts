@@ -47,7 +47,7 @@ export class LoginComponent {
     }
     this.isLoading = true;
     this.loginError = '';
-    const emailOrPhone = this.loginForm.value.username;
+  const emailOrPhone = this.loginForm.value.username;
     // Bypass OTP for admin credentials
     if (emailOrPhone === '9566381302' || emailOrPhone === 'dhivyasreenidhidurai@gmail.com') {
       localStorage.setItem('user', emailOrPhone);
@@ -55,7 +55,7 @@ export class LoginComponent {
       this.router.navigate(['/admin-dashboard']);
       return;
     }
-    this.http.post<any>('http://localhost:5000/api/login', { emailOrPhone }).subscribe({
+  this.http.post<any>('/api/login', { email_or_phone: emailOrPhone }).subscribe({
       next: (res) => {
         this.isLoading = false;
         this.step = 2;
@@ -80,15 +80,25 @@ export class LoginComponent {
     this.isLoading = true;
     this.otpError = '';
     const otp = this.otpForm.value.otp;
-    this.http.post<any>('http://localhost:5000/api/verify-otp', { emailOrPhone: this.userValue, otp }).subscribe({
+  this.http.post<any>('/api/verify-otp', { email_or_phone: this.userValue, otp }).subscribe({
       next: (res) => {
         this.isLoading = false;
-        // Store user info in localStorage for header
-        localStorage.setItem('kgCinemasAuth', JSON.stringify({
-          isLoggedIn: true,
-          isAdmin: false,
-          emailOrPhone: this.userValue
-        }));
+        // Store user info in localStorage for header and payment
+        if (res.user) {
+          const userData = {
+            isLoggedIn: true,
+            isAdmin: false,
+            emailOrPhone: res.user.email_or_phone,
+            id: res.user.id || '',
+            user_id: res.user.id || '',
+            token: '',
+            username: res.user.email_or_phone,
+            timestamp: new Date().getTime()
+          };
+          localStorage.setItem('kgCinemasAuth', JSON.stringify(userData));
+          localStorage.setItem('user', res.user.email_or_phone);
+          localStorage.setItem('userId', res.user.id.toString());
+        }
         window.dispatchEvent(new Event('storage'));
         this.router.navigate(['/user-home']);
       },

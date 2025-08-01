@@ -12,6 +12,7 @@ import { Router } from '@angular/router';
   styleUrl: './content-offer.component.css'
 })
 export class ContentOfferComponent {
+  public headerTitle: string = '';
   
   activeTab: string = 'banner';
  offersForm: FormGroup;

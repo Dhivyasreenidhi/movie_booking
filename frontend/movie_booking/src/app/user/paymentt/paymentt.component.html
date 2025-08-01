@@ -1,6 +1,13 @@
+<app-headers></app-headers><br><br><br><br><br>
+<!-- Payment Success Toast -->
+<div *ngIf="showPaymentToast" class="fixed bottom-6 right-6 z-[99999] bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg animate-fade-in">
+  <span class="font-bold">Payment Successful!</span>
+  <span class="ml-2">Your booking is confirmed.</span>
+</div>
 <div class="relative min-h-screen">
-  <div *ngIf="paymentSuccess" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
-    <div class="bg-white rounded-xl shadow-lg p-8 max-w-lg w-full text-center">
+  <div *ngIf="paymentSuccess" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-80 animate-fade-in" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-xl shadow-lg p-8 max-w-lg w-full text-center relative">
+      <button aria-label="Close" (click)="paymentSuccess = false" class="absolute top-4 right-4 text-gray-400 hover:text-black text-2xl font-bold">&times;</button>
       <h2 class="text-2xl font-bold text-green-600 mb-4">Payment Successful!</h2>
       <div *ngIf="paymentDetails">
         <p class="mb-2"><strong>Payment ID:</strong> {{paymentDetails.paymentId}}</p>
@@ -22,12 +29,26 @@
 
   <div class="relative z-10 container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold text-white mb-6">Payment</h1>
+      <div class="mb-4 p-4 bg-gray-900/50 rounded-lg text-white">
+    <span class="font-semibold">User:</span>
+    <span *ngIf="userEmailOrPhone">{{userEmailOrPhone}}</span>
+    <span *ngIf="userId"> | User ID: {{userId}}</span>
+    <span *ngIf="!userEmailOrPhone">(No user info found)</span>
+      </div>
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <!-- Order Summary (Left) -->
       <div class="bg-black/50 backdrop-blur-md rounded-xl p-6 shadow-lg border border-red-900/50">
         <!-- ...existing order summary code... -->
         <div class="space-y-4">
+          <!-- User Info -->
+          <div class="p-4 bg-gray-900/50 rounded-lg">
+            <h3 class="text-xl font-semibold text-white mb-2">User Details</h3>
+            <div class="space-y-2">
+              <p class="text-gray-300">Email/Phone: <span class="text-white">{{userEmailOrPhone || 'Unknown'}}</span></p>
+              <p class="text-gray-300">User ID: <span class="text-white">{{userId || 'Unknown'}}</span></p>
+            </div>
+          </div>
           <!-- Movie Info -->
           <div class="p-4 bg-gray-900/50 rounded-lg">
             <h3 class="text-xl font-semibold text-white mb-2">Order Summary</h3>
@@ -83,8 +104,8 @@
         </div>
       </div>
       <!-- Payment Gateway (Right) -->
-      <div class="bg-black/50 backdrop-blur-md rounded-xl p-6 shadow-lg border border-red-900/50" *ngIf="showPaymentGateway">
-        <ng-container *ngIf="showPaymentGateway; else emptyRight">
+      <div class="bg-black/50 backdrop-blur-md rounded-xl p-6 shadow-lg border border-red-900/50" *ngIf="showPaymentGateway && !paymentSuccess">
+        <ng-container *ngIf="showPaymentGateway && !paymentSuccess; else emptyRight">
           <h2 class="text-xl font-semibold text-white mb-4">Choose Payment Method</h2>
           <div class="mb-4">
             <label for="paymentMethod" class="block text-white mb-2">Select Payment Method</label>
@@ -153,9 +174,14 @@
                        class="w-full px-4 py-2 bg-gray-800/70 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-600" 
                        placeholder="yourname@upi" />
               </div>
-              <button class="w-full bg-purple-700 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200" (click)="confirmPayment()">
-                Pay via UPI ₹{{calculateFinalAmount()}}
+              <button class="w-full bg-purple-700 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center" 
+                (click)="confirmPayment()" [disabled]="isPaying">
+                <ng-container *ngIf="!isPaying">Pay via UPI ₹{{calculateFinalAmount()}}</ng-container>
+                <ng-container *ngIf="isPaying">
+                  <span class="loader mr-2"></span> Processing...
+                </ng-container>
               </button>
+              <div *ngIf="paymentError" class="mt-2 text-red-500 text-sm text-center">{{paymentError}}</div>
             </div>
           </div>
           <!-- Net Banking -->
@@ -186,3 +212,4 @@
      
   </div>
 </div>
+<app-footers></app-footers>

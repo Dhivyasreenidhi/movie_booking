@@ -69,7 +69,7 @@ export class ManageEmployeesComponent implements OnInit {
       this.searchTerm = term;
     });
     // Fetch users from backend API
-    fetch('http://localhost:5000/api/users')
+  fetch('/api/users')
       .then(res => res.json())
       .then(data => this.users = data)
       .catch(() => this.showNotification('Failed to fetch users', 'error'));

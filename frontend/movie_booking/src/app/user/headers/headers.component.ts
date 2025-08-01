@@ -11,8 +11,10 @@ import { ScrollserviceService } from '../../services/scrollservice.service';
   templateUrl: './headers.component.html',
   styleUrls: ['./headers.component.css']
 })
+
 export class HeadersComponent implements OnInit {
-  showLogoutModal = false; 
+  showLogoutModal = false;
+  showUserDropdown = false;
   private router = inject(Router);
   private authService = inject(AuthService);
   private scrollService = inject(ScrollserviceService);
@@ -20,6 +22,7 @@ export class HeadersComponent implements OnInit {
   isLoggedIn: boolean = false;
   currentUser: string = '';
   isAdmin: boolean = false;
+  userId: string = '';
 
   ngOnInit(): void {
     this.checkAuthStatus();
@@ -27,35 +30,29 @@ export class HeadersComponent implements OnInit {
     this.router.events?.subscribe?.(() => this.checkAuthStatus());
   }
 
-private checkAuthStatus(): void {
-  const authData = localStorage.getItem('kgCinemasAuth');
-  if (authData) {
-    const parsed = JSON.parse(authData);
-    this.isLoggedIn = parsed.isLoggedIn === true;
-    this.isAdmin = parsed.isAdmin === true;
-    if (this.isAdmin) {
-      this.currentUser = 'Admin';
-    } else {
-      if (parsed.emailOrPhone) {
-        if (parsed.emailOrPhone.includes('@')) {
-          this.currentUser = 'User';
-        } else if (/^\d{10}$/.test(parsed.emailOrPhone)) {
-          this.currentUser = 'User';
+  private checkAuthStatus(): void {
+    const authData = localStorage.getItem('kgCinemasAuth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      this.isLoggedIn = parsed.isLoggedIn === true;
+      this.isAdmin = parsed.isAdmin === true;
+      this.userId = parsed.id || '';
+      if (this.isAdmin) {
+        this.currentUser = 'Admin';
+      } else {
+        if (parsed.emailOrPhone) {
+          this.currentUser = parsed.emailOrPhone;
         } else {
           this.currentUser = 'User';
         }
-      } else {
-        this.currentUser = 'User';
       }
+    } else {
+      this.isLoggedIn = false;
+      this.isAdmin = false;
+      this.currentUser = '';
+      this.userId = '';
     }
-  } else {
-    this.isLoggedIn = false;
-    this.isAdmin = false;
-    this.currentUser = '';
   }
-
-
-}
 
 
   // Generic scroll/navigate function for all sections

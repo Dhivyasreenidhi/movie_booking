@@ -20,7 +20,7 @@ export interface Movie {
 
 @Injectable({ providedIn: 'root' })
 export class MovieService {
-  private apiUrl = 'http://localhost:5000/api/movies';
+  private apiUrl = '/api/movies';
 
   constructor(private http: HttpClient) {}
 

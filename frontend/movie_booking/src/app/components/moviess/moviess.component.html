@@ -50,6 +50,27 @@
               <i class="fas fa-share-alt mr-2"></i> Share
             </button>
           </div>
+
+          <!-- Horizontal Calendar Bar -->
+          <div class="mt-8">
+            <div class="flex gap-2 justify-center items-center">
+              <ng-container *ngFor="let date of weekDates">
+                <button (click)="onSelectDate(date)"
+                  [ngClass]="{
+                    'bg-orange-600 text-white': date.toDateString() === selectedDate.toDateString(),
+                    'bg-gray-800 text-orange-300': date.toDateString() !== selectedDate.toDateString()
+                  }"
+                  class="px-4 py-2 rounded-lg font-semibold shadow hover:bg-orange-700 transition">
+                  <div class="text-xs font-bold">{{date | date:'EEE'}}</div>
+                  <div class="text-lg">{{date | date:'d'}}</div>
+                  <div class="text-xs">{{date | date:'MMM'}}</div>
+                </button>
+              </ng-container>
+            </div>
+            <div class="text-center mt-2 text-orange-400 font-bold text-lg">
+              Today: {{today | date:'fullDate'}}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -139,7 +160,39 @@
       </div>
 
       <!-- Reviews & More Section -->
-      
+
+      <!-- Login Popup Modal -->
+      <div *ngIf="showLoginPopup" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fade-in">
+        <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+          <h2 class="text-2xl font-bold text-yellow-400 mb-4">Login Required</h2>
+          <form (ngSubmit)="handleLogin()" #loginForm="ngForm">
+            <div class="mb-4">
+              <label class="block text-white mb-2">Username or Email</label>
+              <input type="text" [(ngModel)]="loginUsername" name="username" required class="w-full px-4 py-2 rounded bg-gray-800 text-white" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-white mb-2">Password</label>
+              <input type="password" [(ngModel)]="loginPassword" name="password" required class="w-full px-4 py-2 rounded bg-gray-800 text-white" />
+            </div>
+            <div class="flex justify-end gap-4">
+              <button type="button" (click)="showLoginPopup = false" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">Cancel</button>
+              <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded">Login</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Signup Email Popup Modal -->
+      <div *ngIf="showSignupEmailPopup" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fade-in">
+        <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl max-w-lg w-full relative">
+          <button (click)="showSignupEmailPopup = false" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+          <app-sign-up-email
+            [bookingData]="pendingBookingData"
+            (signupSuccess)="handleSignupEmailSuccess($event)"
+          ></app-sign-up-email>
+        </div>
+      </div>
+
     </div>
     <app-footer></app-footer>
   </div>

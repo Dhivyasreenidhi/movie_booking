@@ -1,7 +1,17 @@
 <app-headers></app-headers><br><br><br><br><br>
 <!-- Same gradient background as homepage -->
   
- <div class="relative p-6 sm:p-8 rounded-2xl max-w-8xl w-full shadow-2xl font-sans overflow-hidden">
+<div class="relative p-6 sm:p-8 rounded-2xl max-w-8xl w-full shadow-2xl font-sans overflow-hidden">
+  <!-- Toast Box -->
+  <div *ngIf="showToast" class="fixed bottom-10 right-10 z-50 animate-fadeIn max-w-md w-full">
+    <div class="bg-gray-900 border border-yellow-500 text-yellow-100 px-6 py-4 rounded-lg shadow-2xl flex flex-col gap-2 w-full">
+      <div class="flex justify-between items-center mb-2">
+        <span class="font-bold text-lg">Notice</span>
+        <button (click)="showToast = false" class="text-gray-400 hover:text-yellow-400 text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div>{{toastMessage}}</div>
+    </div>
+  </div>
   <!-- Background Layers -->
   <div class="absolute inset-0 z-0 bg-gradient-to-b from-[#5c0000]/95 via-black/85 to-[#5c0000]/95"></div>
   <div class="absolute inset-0 z-10 backdrop-blur-lg bg-black/20 shadow-inner shadow-[#ff000040]"></div>
@@ -19,89 +29,48 @@
       </button>
     </div>
 
+    <!-- Loading State -->
+    <div *ngIf="loading" class="bg-gray-800/80 p-6 rounded-lg text-center backdrop-blur-sm">
+      <p class="text-gray-400 text-lg">Loading bookings...</p>
+    </div>
+
     <!-- No Booking State -->
-    <div *ngIf="!booking" class="bg-gray-800/80 p-6 rounded-lg text-center backdrop-blur-sm">
+    <div *ngIf="!loading && activeBookings.length === 0" class="bg-gray-800/80 p-6 rounded-lg text-center backdrop-blur-sm">
       <p class="text-gray-400 text-lg">No active bookings found.</p>
-      <button (click)="completeBooking()" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full transition-transform transform hover:scale-105">
-        Create Sample Booking
-      </button>
     </div>
 
-    <!-- Booking Details -->
-    <div *ngIf="booking" class="bg-gray-800/80 p-6 rounded-lg mb-6 backdrop-blur-sm">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-        <div>
-          <p class="text-white text-xl font-semibold">{{booking.movieTitle}}</p>
-          <p class="text-gray-300">{{booking.theaterName}} • {{booking.showtime}} • {{booking.showDate.day}}, {{booking.showDate.date}} {{booking.showDate.month}}</p>
+    <!-- Active Bookings List -->
+    <div *ngIf="activeBookings.length > 0">
+      <div *ngFor="let booking of activeBookings" class="bg-gray-800/80 p-6 rounded-lg mb-6 backdrop-blur-sm">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+          <div>
+            <p class="text-white text-xl font-semibold">{{booking.movie_title || booking.movie}}</p>
+            <p class="text-gray-300">{{booking.theater}} • {{booking.showtime}}</p>
+            <p class="text-gray-400 text-sm">Show Date: {{showtimeDates[booking.showtime_id] || 'N/A'}}</p>
+          </div>
+          <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm mt-2 sm:mt-0">
+            {{booking.status | titlecase}}
+          </span>
         </div>
-        <span class="bg-green-600 text-white px-3 py-1 rounded-full text-sm mt-2 sm:mt-0" [ngClass]="{
-          'bg-green-600': getBookingStatus() === 'Confirmed',
-          'bg-red-600': getBookingStatus() === 'Cancelled',
-          'bg-gray-600': getBookingStatus() === 'Show Over'
-        }">
-          {{getBookingStatus()}}
-        </span>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div>
-          <p class="text-gray-400">Booking ID</p>
-          <p class="text-white">{{booking.id}}</p>
-        </div>
-        <div>
-          <p class="text-gray-400">Seats</p>
-          <p class="text-white">{{booking.seats.join(', ')}}</p>
-        </div>
-        <div>
-          <p class="text-gray-400">Total Paid</p>
-          <p class="text-white">₹{{booking.seats.length * booking.ticketPrice}}</p>
-        </div>
-        <div>
-          <p class="text-gray-400">Booking Time</p>
-          <p class="text-white">{{booking.bookingTime | date:'medium'}}</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div>
+            <p class="text-gray-400">Booking ID</p>
+            <p class="text-white">{{booking.id || booking.paymentId}}</p>
+          </div>
+          <div>
+            <p class="text-gray-400">Seats</p>
+            <p class="text-white">{{booking.seats}}</p>
+          </div>
+          <div>
+            <p class="text-gray-400">Total Paid</p>
+            <p class="text-white">₹{{booking.amount}}</p>
+          </div>
+          <div>
+            <button (click)="downloadTicket(booking)" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mr-2">Download Ticket</button>
+            <button (click)="cancelTicket(booking)" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded">Cancel Ticket</button>
+          </div>
         </div>
       </div>
-
-      <div *ngIf="canCancel()" class="mt-4 p-4 bg-yellow-900/30 rounded-lg">
-        <p class="text-yellow-400 flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          You can cancel this booking until {{getCancellationDeadline() | date:'medium'}} for a full refund.
-        </p>
-      </div>
-      <div *ngIf="!canCancel() && !isShowOver() && booking" class="mt-4 p-4 bg-red-900/30 rounded-lg">
-        <p class="text-red-400 flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          Cancellation is no longer available for this booking.
-        </p>
-      </div>
-    </div>
-
-    <!-- Action Buttons -->
-    <div *ngIf="booking" class="flex flex-col sm:flex-row justify-between gap-4">
-      <button (click)="downloadTicket()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full flex items-center justify-center transition-transform transform hover:scale-105">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-        Download Ticket
-      </button>
-      <button (click)="sendToEmail()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-full flex items-center justify-center transition-transform transform hover:scale-105">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        Send to Email
-      </button>
-      <button (click)="openCancelModal()" [disabled]="!canCancel()" 
-              [ngClass]="{'bg-gray-600 cursor-not-allowed': !canCancel(), 'bg-red-600 hover:bg-red-700': canCancel()}"
-              class="text-white px-6 py-3 rounded-full flex items-center justify-center transition-transform transform hover:scale-105">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        Cancel Booking
-      </button>
     </div>
 
     <!-- Booking History -->
@@ -109,36 +78,11 @@
       <h3 class="text-xl font-semibold text-white mb-4">Booking History</h3>
       <div class="bg-gray-800/80 p-4 rounded-lg backdrop-blur-sm">
         <div *ngFor="let pastBooking of bookingHistory" class="border-b border-gray-700 py-2">
-          <p class="text-white">{{pastBooking.movieTitle}} • {{pastBooking.showDate.day}}, {{pastBooking.showDate.date}} {{pastBooking.showDate.month}}</p>
-          <p class="text-gray-400 text-sm">Booking ID: {{pastBooking.id}} • Status: {{pastBooking.isCancelled ? 'Cancelled' : 'Completed'}}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cancellation Modal -->
-    <div *ngIf="showCancellationModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 animate-fade-in">
-      <div class="bg-gray-800 p-6 sm:p-8 rounded-2xl max-w-md w-full shadow-2xl">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl sm:text-3xl font-bold text-white">Confirm Cancellation</h2>
-          <button (click)="showCancellationModal = false" class="text-gray-400 hover:text-white">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div class="mb-6">
-          <p class="text-white mb-4">Are you sure you want to cancel this booking?</p>
-          <div class="bg-gray-700 p-4 rounded-lg">
-            <p class="text-white"><strong>Movie:</strong> {{booking?.movieTitle}}</p>
-            <p class="text-white"><strong>Showtime:</strong> {{booking?.showtime}}, {{booking?.showDate?.day}}, {{booking?.showDate?.date}} {{booking?.showDate?.month}}</p>
-            <p class="text-white"><strong>Seats:</strong> {{booking?.seats?.join(', ')}}</p>
-            <p class="text-green-400 font-semibold mt-2">Refund Amount: ₹{{(booking?.seats?.length || 0) * (booking?.ticketPrice || 0)}}</p>
-          </div>
-          <p class="text-yellow-400 text-sm mt-3">Refund will be processed to your original payment method within 5-7 business days.</p>
-        </div>
-        <div class="flex justify-end gap-4">
-          <button (click)="showCancellationModal = false" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-full transition-transform transform hover:scale-105">Go Back</button>
-          <button (click)="confirmCancellation()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full transition-transform transform hover:scale-105">Confirm Cancellation</button>
+          <p class="text-white">{{pastBooking.movie_title || pastBooking.movie}} • {{pastBooking.theater}} • {{pastBooking.showtime}}</p>
+          <p class="text-gray-400 text-sm">Booking ID: {{pastBooking.id || pastBooking.paymentId}} • Status: 
+            <span *ngIf="pastBooking.status === 'canceled'" class="text-red-400 font-bold">Canceled</span>
+            <span *ngIf="pastBooking.status !== 'canceled'">{{pastBooking.status | titlecase}}</span>
+          </p>
         </div>
       </div>
     </div>

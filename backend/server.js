@@ -2,24 +2,132 @@
 const express = require('express');
 const pool = require('./config/db');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+
+
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Payment details endpoint
-app.post('/api/payments', (req, res) => {
-  // ...existing code...
-  // No placeholder image logic in backend; if needed, handle in frontend.
-  const { movie, showtime, theater, seats, amount, discount, offerUsed } = req.body;
-  const sql = `INSERT INTO payments (movie_title, showtime, theater, seats, amount, discount, offer_used) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-  pool.query(sql, [movie, showtime, theater, seats.join(','), amount, discount, offerUsed], (err, result) => {
-    if (err) {
-      console.error('Error inserting payment:', err);
-      return res.status(500).json({ error: 'Failed to store payment details' });
+// Delete a payment by ID
+app.delete('/api/payments/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM payments WHERE id=?', [id]);
+    if (result.affectedRows > 0) {
+      res.json({ message: 'Payment deleted' });
+    } else {
+      res.status(404).json({ error: 'Payment not found' });
     }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete payment' });
+  }
+});
+
+// --- VERIFY SIGNUP OTP ENDPOINT ---
+app.post('/api/verify-signup-otp', async (req, res) => {
+  const { email_or_phone, otp } = req.body;
+  // Debug logging
+  console.log('POST /api/verify-signup-otp body:', req.body);
+  console.log('Current otpStore:', otpStore);
+  if (!email_or_phone || !otp) {
+    return res.status(400).json({ message: 'Email or phone and OTP required' });
+  }
+  try {
+    if (!otpStore[email_or_phone] || otpStore[email_or_phone] !== otp) {
+      console.log('OTP mismatch for', email_or_phone, 'Expected:', otpStore[email_or_phone], 'Received:', otp);
+      return res.status(401).json({ message: 'Invalid OTP', success: false });
+    }
+  // OTP is valid, do not remove it (allow multiple verifications)
+  // delete otpStore[email_or_phone];
+    // Insert user if not exists
+    let [rows] = await pool.query('SELECT * FROM users WHERE email_or_phone=?', [email_or_phone]);
+    if (rows.length === 0) {
+      const [result] = await pool.query('INSERT INTO users (email_or_phone) VALUES (?)', [email_or_phone]);
+      rows = [{ id: result.insertId, email_or_phone }];
+    }
+    const userId = rows[0].id;
+    // Generate tokens
+    const payload = { userId, emailOrPhone: email_or_phone };
+    const accessToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+    const refreshToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    // Store session in user_sessions table if exists
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 15 * 60 * 1000);
+    try {
+      await pool.query(
+        'INSERT INTO user_sessions (user_id, access_token, refresh_token, created_at, expires_at) VALUES (?, ?, ?, ?, ?)',
+        [userId, accessToken, refreshToken, now, expiresAt]
+      );
+    } catch (sessionErr) {
+      // Ignore session insert errors for now
+    }
+    res.json({
+      message: 'Signup successful',
+      userId,
+      success: true,
+      access_token: accessToken,
+      refresh_token: refreshToken
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to verify signup OTP', error: err.message });
+  }
+});
+
+
+
+
+// Cancel a payment (booking) by ID: set status to 'wants refund'
+app.put('/api/payments/:id/cancel', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('UPDATE payments SET status = ? WHERE id = ?', ['wants refund', id]);
+    if (result.affectedRows > 0) {
+      res.json({ message: 'Payment status updated to wants refund' });
+    } else {
+      res.status(404).json({ error: 'Payment not found' });
+    }
+  } catch (err) {
+    console.error('Error updating payment status:', err);
+    res.status(500).json({ error: 'Failed to update payment status' });
+  }
+});
+
+// Payment details endpoint
+app.post('/api/payments', async (req, res) => {
+  const { user_id, movie, showtime, theater, seats, amount, discount, offerUsed } = req.body;
+  // Validate required fields
+  if (!user_id || !movie || !showtime || !theater || !seats || !amount) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  const seatsStr = Array.isArray(seats) ? seats.join(',') : seats;
+  const sql = `INSERT INTO payments (user_id, movie_title, showtime, theater, seats, amount, discount, offer_used, payment_date, payment_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+  try {
+    const [result] = await pool.query(sql, [user_id, movie, showtime, theater, seatsStr, amount, discount, offerUsed]);
     res.json({ success: true, paymentId: result.insertId });
-  });
+  } catch (err) {
+    console.error('Error inserting payment:', err);
+    res.status(500).json({ error: 'Failed to store payment details', details: err.message });
+  }
+});
+
+// Get all payments
+app.get('/api/payments', async (req, res) => {
+  try {
+    const userId = req.query.user_id;
+    let sql = 'SELECT * FROM payments';
+    let params = [];
+    if (userId) {
+      sql += ' WHERE user_id = ?';
+      params.push(userId);
+    }
+    const [rows] = await pool.query(sql, params);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- SEATS ENDPOINTS ---
@@ -161,7 +269,7 @@ app.get('/api/movies', async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error('Error in GET /api/movies:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message, stack: err.stack });
   }
 });
 app.post('/api/movies', async (req, res) => {
@@ -226,7 +334,7 @@ app.delete('/api/movies/:id', async (req, res) => {
   }
 });
 
-const PORT = 5000;
+const PORT = 5002;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Backend started. Listening for requests...');
@@ -237,7 +345,8 @@ app.get('/api/users', async (req, res) => {
     const [rows] = await pool.query('SELECT * FROM users');
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in GET /api/users:', err);
+    res.status(500).json({ error: err.message || 'Unknown error', stack: err.stack });
   }
 });
 
@@ -255,8 +364,15 @@ app.get('/api/users/:id', async (req, res) => {
 app.post('/api/users', async (req, res) => {
   const { email_or_phone } = req.body;
   try {
+    // Check if user already exists
+    const [existing] = await pool.query('SELECT id FROM users WHERE email_or_phone = ?', [email_or_phone]);
+    if (existing.length > 0) {
+      // User exists, return existing id
+      return res.json({ id: existing[0].id, alreadyExists: true });
+    }
+    // Insert new user
     const [result] = await pool.query('INSERT INTO users (email_or_phone) VALUES (?)', [email_or_phone]);
-    res.json({ id: result.insertId });
+    res.json({ id: result.insertId, alreadyExists: false });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -292,6 +408,18 @@ app.get('/api/showtimes', async (req, res) => {
       ORDER BY s.id ASC
     `);
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get a specific showtime by ID
+app.get('/api/showtimes/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await pool.query('SELECT * FROM showtimes WHERE id=?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: 'Showtime not found' });
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -430,17 +558,17 @@ const otpStore = {};
 // NOTE: For development/testing, the OTP is returned in the response as { otp: ... }.
 // Display this OTP in your frontend for easy testing.
 app.post('/api/signup', async (req, res) => {
-  const { emailOrPhone } = req.body;
-  if (!emailOrPhone) {
+  const { email_or_phone } = req.body;
+  if (!email_or_phone) {
     return res.status(400).json({ message: 'Email or phone is required' });
   }
   const otp = generateOTP();
-  otpStore[emailOrPhone] = otp;
+  otpStore[email_or_phone] = otp;
   try {
     // Insert user if not exists
-    let [rows] = await pool.query('SELECT * FROM users WHERE email_or_phone=?', [emailOrPhone]);
+    let [rows] = await pool.query('SELECT * FROM users WHERE email_or_phone=?', [email_or_phone]);
     if (rows.length === 0) {
-      await pool.query('INSERT INTO users (email_or_phone) VALUES (?)', [emailOrPhone]);
+      await pool.query('INSERT INTO users (email_or_phone) VALUES (?)', [email_or_phone]);
     }
     // In production, send OTP via SMS/email here
     res.json({ message: 'OTP sent', otp }); // For demo, return OTP
@@ -451,17 +579,17 @@ app.post('/api/signup', async (req, res) => {
 
 // --- VERIFY OTP ENDPOINT (in-memory, one-time) ---
 app.post('/api/verify-otp', async (req, res) => {
-  const { emailOrPhone, otp } = req.body;
-  if (!emailOrPhone || !otp) {
+  const { email_or_phone, otp } = req.body;
+  if (!email_or_phone || !otp) {
     return res.status(400).json({ message: 'Email/phone and OTP are required' });
   }
   try {
-    if (!otpStore[emailOrPhone] || otpStore[emailOrPhone] !== otp) {
+    if (!otpStore[email_or_phone] || otpStore[email_or_phone] !== otp) {
       return res.status(401).json({ message: 'Invalid OTP. Please try again.', success: false });
     }
     // OTP is valid, remove it (one-time)
-    delete otpStore[emailOrPhone];
-    const [rows] = await pool.query('SELECT * FROM users WHERE email_or_phone=?', [emailOrPhone]);
+    delete otpStore[email_or_phone];
+    const [rows] = await pool.query('SELECT * FROM users WHERE email_or_phone=?', [email_or_phone]);
     res.json({ message: 'OTP verified', success: true, user: rows[0] });
   } catch (err) {
     res.status(500).json({ message: 'Failed to verify OTP', error: err.message });
@@ -560,17 +688,17 @@ app.delete('/api/homepage-banner/:id', async (req, res) => {
 
 // --- LOGIN/SIGNUP ENDPOINTS ---
 app.post('/api/login', async (req, res) => {
-  const { emailOrPhone } = req.body;
-  if (!emailOrPhone) {
+  const { email_or_phone } = req.body;
+  if (!email_or_phone) {
     return res.status(400).json({ message: 'Email or phone is required' });
   }
   const otp = generateOTP();
   try {
-    let [rows] = await pool.query('SELECT * FROM users WHERE email_or_phone=?', [emailOrPhone]);
+    let [rows] = await pool.query('SELECT * FROM users WHERE email_or_phone=?', [email_or_phone]);
     if (rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
-    otpStore[emailOrPhone] = otp;
+    otpStore[email_or_phone] = otp;
     // In production, send OTP via SMS/email here
     res.json({ message: 'OTP sent', otp }); // For demo, return OTP
   } catch (err) {

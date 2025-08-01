@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { ManageShowtimesComponent } from './manage-showtimes.component';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute } from '@angular/router';
 
 describe('ManageShowtimesComponent', () => {
   let component: ManageShowtimesComponent;
@@ -8,7 +9,8 @@ describe('ManageShowtimesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ManageShowtimesComponent]
+      imports: [ManageShowtimesComponent, HttpClientTestingModule],
+      providers: [{ provide: ActivatedRoute, useValue: {} }]
     })
     .compileComponents();
 

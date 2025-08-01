@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 
 import { NowStreamingComponent } from './now-streaming.component';
 
@@ -8,7 +9,8 @@ describe('NowStreamingComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NowStreamingComponent]
+      imports: [NowStreamingComponent],
+      providers: [{ provide: ActivatedRoute, useValue: {} }]
     })
     .compileComponents();
 

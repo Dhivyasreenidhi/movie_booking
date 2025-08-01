@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { ActivatedRoute } from '@angular/router';
 import { ManageseatsComponent } from './manageseats.component';
 
 describe('ManageseatsComponent', () => {
@@ -8,9 +8,11 @@ describe('ManageseatsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ManageseatsComponent]
-    })
-    .compileComponents();
+      imports: [ManageseatsComponent],
+      providers: [
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ManageseatsComponent);
     component = fixture.componentInstance;

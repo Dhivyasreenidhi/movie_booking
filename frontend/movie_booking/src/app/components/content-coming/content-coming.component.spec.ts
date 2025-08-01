@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { ActivatedRoute } from '@angular/router';
 import { ContentComingComponent } from './content-coming.component';
 
 describe('ContentComingComponent', () => {
@@ -8,9 +8,11 @@ describe('ContentComingComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ContentComingComponent]
-    })
-    .compileComponents();
+      imports: [ContentComingComponent],
+      providers: [
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ContentComingComponent);
     component = fixture.componentInstance;

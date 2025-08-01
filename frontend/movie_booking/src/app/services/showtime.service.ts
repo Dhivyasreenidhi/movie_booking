@@ -16,7 +16,7 @@ export interface Showtime {
 
 @Injectable({ providedIn: 'root' })
 export class ShowtimeService {
-  private apiUrl = 'http://localhost:5000/api/showtimes';
+  private apiUrl = '/api/showtimes';
 
   constructor(private http: HttpClient) {}
 

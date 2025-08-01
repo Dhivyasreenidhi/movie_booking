@@ -19,6 +19,11 @@ export class MovieComponent implements OnInit, OnDestroy {
 
   // Movie Data
   movie: any = {};
+
+  // Calendar logic
+  today: Date = new Date();
+  weekDates: Date[] = [];
+  selectedDate: Date = new Date();
   constructor(
     private sanitizer: DomSanitizer,
     private route: ActivatedRoute,
@@ -31,6 +36,14 @@ export class MovieComponent implements OnInit, OnDestroy {
   showtimes: any[] = [];
 
   ngOnInit(): void {
+    // Generate week dates (today + next 6 days)
+    this.weekDates = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(this.today.getDate() + i);
+      return d;
+    });
+    this.selectedDate = this.today;
+
     this.route.paramMap.subscribe(params => {
       const movieId = params.get('id');
       if (movieId) {
@@ -38,6 +51,10 @@ export class MovieComponent implements OnInit, OnDestroy {
         this.fetchShowtimes(movieId);
       }
     });
+  }
+
+  onSelectDate(date: Date): void {
+    this.selectedDate = date;
   }
 
 
@@ -235,15 +252,8 @@ export class MovieComponent implements OnInit, OnDestroy {
         this.bookingId = this.generateBookingId();
         // Refresh seats for this showtime
         this.fetchSeatsForShowtime(this.selectedShowtimeId!);
-        // Navigate to paymentt component after booking
-        this.router.navigate(['/paymentt'], {
-          queryParams: {
-            movieId: this.movie.id,
-            showtimeId: this.selectedShowtimeId,
-            seats: this.selectedSeats.join(','),
-            total: this.selectedSeats.length * this.ticketPrice
-          }
-        });
+        // Do NOT fetch or use latest user/userId
+        this.navigateToPaymentProcess();
       },
       error: () => {
         this.showAlertModal('Booking Failed', 'Could not book seats. Please try again.');
@@ -318,5 +328,20 @@ export class MovieComponent implements OnInit, OnDestroy {
     return '★'.repeat(fullStars) +
            (halfStar ? '½' : '') +
            '☆'.repeat(emptyStars);
+  }
+
+  // Helper function for navigation to payment-process
+  navigateToPaymentProcess(): void {
+    this.router.navigate(['/payment-process'], {
+      queryParams: {
+        movie: this.movie.id,
+        showtime: this.selectedShowtimeId,
+        seats: this.selectedSeats.join(','),
+        theater: this.selectedTheater,
+        time: this.selectedTime,
+        ticketPrice: this.ticketPrice,
+        total: this.selectedSeats.length * this.ticketPrice
+      }
+    });
   }
 }

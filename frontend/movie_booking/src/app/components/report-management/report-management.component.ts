@@ -9,6 +9,7 @@ import { NavBarComponent } from '../nav-bar/nav-bar.component';
 
 @Component({
   selector: 'app-report-management',
+  standalone: true,
   imports: [SidebarComponent,NavBarComponent],
   templateUrl: './report-management.component.html',
   styleUrls: ['./report-management.component.css']

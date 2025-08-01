@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { ActivatedRoute } from '@angular/router';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ManageOffersComponent } from './manage-offers.component';
 
 describe('ManageOffersComponent', () => {
@@ -8,9 +9,11 @@ describe('ManageOffersComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ManageOffersComponent]
-    })
-    .compileComponents();
+      imports: [ManageOffersComponent, HttpClientTestingModule],
+      providers: [
+        { provide: ActivatedRoute, useValue: {} }
+      ]
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ManageOffersComponent);
     component = fixture.componentInstance;
